@@ -1,6 +1,7 @@
 import { Server } from 'socket.io';
 import { env } from '../config/env.js';
 import User from '../models/User.model.js';
+import { canTrackUser } from '../services/trackingAccess.service.js';
 import { verifyToken } from '../utils/jwt.js';
 import { getGuardianRoom, getUserRoom } from './socketRooms.js';
 
@@ -94,8 +95,19 @@ export function initializeSocketServer(httpServer) {
 
     io.emit('connected-users', getConnectedUsersSnapshot());
 
-    socket.on('guardian-joined', ({ trackedUserId } = {}, ack) => {
+    socket.on('guardian-joined', async ({ trackedUserId } = {}, ack) => {
       const roomUserId = trackedUserId || userId;
+      const trackedUser = await User.findById(roomUserId);
+
+      if (!trackedUser || !canTrackUser(user, trackedUser)) {
+        const response = {
+          success: false,
+          message: 'You are not allowed to join this tracking room',
+        };
+        ack?.(response);
+        return;
+      }
+
       socket.join(getGuardianRoom(roomUserId));
 
       const response = {
