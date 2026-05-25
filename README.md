@@ -63,6 +63,16 @@ GuardianPath AI is an AI-powered real-time safety navigation and emergency respo
 - Short alarm tone for danger alerts
 - Realtime `danger-alert` socket emit for guardians/backend listeners
 
+## Step 7 Features
+
+- SOS emergency button in the dashboard
+- MongoDB emergency log records
+- Live location attached to each SOS event
+- Guardian contact snapshot attached to the emergency
+- Active emergency popup UI
+- Resolve or cancel emergency status
+- Realtime `sos-alert` socket emit for guardian rooms
+
 ## Installation
 
 ```bash
@@ -127,6 +137,9 @@ POST /api/auth/login
 POST /api/auth/logout
 GET  /api/auth/me
 PUT  /api/auth/guardian-contacts
+POST /api/emergencies/sos
+GET  /api/emergencies
+PATCH /api/emergencies/:emergencyId/resolve
 GET  /api/health
 ```
 
@@ -169,5 +182,5 @@ GuardianPath-AI/
 
 ## Next Step
 
-Step 7 will add the SOS emergency system and MongoDB emergency logs.
+Step 8 will add Twilio SMS alerts to trusted guardians.
 "# GuardianPath-AI" 

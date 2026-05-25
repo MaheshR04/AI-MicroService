@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { AlertTriangle, LocateFixed, MapPinned, Navigation, RadioTower, Search } from 'lucide-react';
+import SosPanel from '../components/emergency/SosPanel.jsx';
 import GuardianContactsEditor from '../components/forms/GuardianContactsEditor.jsx';
 import MapView from '../components/map/MapView.jsx';
 import { CRIME_ZONES } from '../data/crimeZones.js';
@@ -189,6 +190,17 @@ function DashboardPage() {
         </div>
       ) : null}
 
+      <div className="mt-8">
+        <SosPanel
+          dangerAssessment={dangerAssessment}
+          isTracking={isTracking}
+          location={location}
+          startTracking={startTracking}
+          token={token}
+          user={user}
+        />
+      </div>
+
       <div className="mt-8 rounded-lg border border-slate-200 bg-white p-5 shadow-soft">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end">
           <form onSubmit={handleDestinationSearch} className="flex-1">
@@ -326,7 +338,7 @@ function DashboardPage() {
                       <span className="text-xs font-bold text-slate-500">{zone.level}</span>
                     </div>
                     <p className="mt-1 text-xs text-slate-500">
-                      {Math.round(zone.distanceMeters)} m away • {zone.category}
+                      {Math.round(zone.distanceMeters)} m away - {zone.category}
                     </p>
                   </div>
                 ))}

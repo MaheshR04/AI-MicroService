@@ -26,3 +26,17 @@ export function disconnectSocket() {
     socket.disconnect();
   }
 }
+
+export function emitSosAlert(token, payload) {
+  const activeSocket = getSocket(token);
+
+  if (activeSocket.connected) {
+    activeSocket.emit('sos-alert', payload);
+    return;
+  }
+
+  activeSocket.connect();
+  activeSocket.once('connect', () => {
+    activeSocket.emit('sos-alert', payload);
+  });
+}
