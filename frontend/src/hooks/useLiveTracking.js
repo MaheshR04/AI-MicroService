@@ -59,6 +59,10 @@ export function useLiveTracking({ enabled, location, token }) {
       window.dispatchEvent(new CustomEvent('agent-escalation', { detail: payload }));
     };
 
+    const handleAgentReasoning = (payload) => {
+      window.dispatchEvent(new CustomEvent('agent-reasoning', { detail: payload }));
+    };
+
     socket.on('connect', handleConnect);
     socket.on('disconnect', handleDisconnect);
     socket.on('connect_error', handleConnectError);
@@ -66,6 +70,7 @@ export function useLiveTracking({ enabled, location, token }) {
     socket.on('connected-users', handleConnectedUsers);
     socket.on('agent-advisory', handleAgentAdvisory);
     socket.on('agent-escalation', handleAgentEscalation);
+    socket.on('agent-reasoning', handleAgentReasoning);
 
     const connectTimer = window.setTimeout(() => {
       setSocketStatus(socket.connected ? 'connected' : 'connecting');
@@ -81,6 +86,7 @@ export function useLiveTracking({ enabled, location, token }) {
       socket.off('connected-users', handleConnectedUsers);
       socket.off('agent-advisory', handleAgentAdvisory);
       socket.off('agent-escalation', handleAgentEscalation);
+      socket.off('agent-reasoning', handleAgentReasoning);
       disconnectSocket();
     };
   }, [enabled, token]);

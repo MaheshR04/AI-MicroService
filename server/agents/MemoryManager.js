@@ -13,6 +13,7 @@ class MemoryManager {
         reflections: [],
         movementStatus: 'UNKNOWN',
         stationaryDurationSeconds: 0,
+        reasoningLogs: [],
         lastUpdated: new Date(),
       });
     }
@@ -67,6 +68,25 @@ class MemoryManager {
     const memory = this.getMemory(userId);
     const filtered = memory.reflections.filter((r) => r.type === reflectionType);
     return filtered[filtered.length - 1] || null;
+  }
+
+  addReasoningLog(userId, logEntry) {
+    const memory = this.getMemory(userId);
+    if (!memory.reasoningLogs) {
+      memory.reasoningLogs = [];
+    }
+    memory.reasoningLogs.push({
+      timestamp: new Date().toISOString(),
+      ...logEntry,
+    });
+    if (memory.reasoningLogs.length > 20) {
+      memory.reasoningLogs.shift();
+    }
+  }
+
+  getReasoningLogs(userId) {
+    const memory = this.getMemory(userId);
+    return memory.reasoningLogs || [];
   }
 
   clearMemory(userId) {

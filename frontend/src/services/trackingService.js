@@ -9,3 +9,8 @@ export async function fetchTrackingSnapshot(userId) {
   const { data } = await apiClient.get(`/tracking/${userId}`);
   return data;
 }
+
+export async function fetchReasoningLogs(userId) {
+  const { data } = await apiClient.get(`/tracking/${userId}/reasoning-logs`);
+  return data;
+}

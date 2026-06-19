@@ -3,6 +3,7 @@ import User from '../models/User.model.js';
 import { canTrackUser } from '../services/trackingAccess.service.js';
 import { createError } from '../utils/appError.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
+import { memoryManager } from '../agents/MemoryManager.js';
 
 export const getTrackingSnapshot = asyncHandler(async (req, res) => {
   const trackedUser = await User.findById(req.params.userId);
@@ -66,6 +67,26 @@ export const getTrackedUsers = asyncHandler(async (req, res) => {
       phoneNumber: u.phoneNumber,
       currentLocation: u.currentLocation,
     })),
+  });
+});
+
+export const getAgentReasoningLogs = asyncHandler(async (req, res) => {
+  const trackedUser = await User.findById(req.params.userId);
+
+  if (!trackedUser) {
+    throw createError('Tracked user not found', 404);
+  }
+
+  if (!canTrackUser(req.user, trackedUser)) {
+    throw createError('You are not allowed to track this user or access their logs', 403);
+  }
+
+  const logs = memoryManager.getReasoningLogs(req.params.userId);
+
+  res.status(200).json({
+    success: true,
+    userId: req.params.userId,
+    reasoningLogs: logs,
   });
 });
 

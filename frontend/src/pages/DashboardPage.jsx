@@ -12,6 +12,7 @@ import { formatAccuracy, formatCoordinate, formatTimestamp } from '../services/m
 import { fetchRouteAlternatives, searchDestinations } from '../services/routeService.js';
 import { analyzeCrimeRisk, getRiskToneClass } from '../utils/crimeRiskEngine.js';
 import { compareRoutes, formatDistance, formatDuration } from '../utils/routeComparison.js';
+import { fetchReasoningLogs } from '../services/trackingService.js';
 
 const cards = [
   {
@@ -55,20 +56,43 @@ function DashboardPage() {
   });
   const [guardianContacts, setGuardianContacts] = useState(user?.guardianContacts || []);
   const [agentTelemetry, setAgentTelemetry] = useState(null);
+  const [reasoningLogs, setReasoningLogs] = useState([]);
 
   useEffect(() => {
     if (!isTracking) {
       setAgentTelemetry(null);
+      setReasoningLogs([]);
       return undefined;
+    }
+
+    if (user?._id) {
+      fetchReasoningLogs(user._id)
+        .then((res) => {
+          if (res?.success) {
+            setReasoningLogs(res.reasoningLogs || []);
+          }
+        })
+        .catch((err) => console.error('Failed to load initial reasoning logs', err));
     }
 
     const handleAdvisory = (event) => {
       setAgentTelemetry(event.detail);
     };
 
+    const handleReasoning = (event) => {
+      if (event.detail?.userId === user?._id) {
+        setReasoningLogs(event.detail?.reasoningLogs || []);
+      }
+    };
+
     window.addEventListener('agent-advisory', handleAdvisory);
-    return () => window.removeEventListener('agent-advisory', handleAdvisory);
-  }, [isTracking]);
+    window.addEventListener('agent-reasoning', handleReasoning);
+
+    return () => {
+      window.removeEventListener('agent-advisory', handleAdvisory);
+      window.removeEventListener('agent-reasoning', handleReasoning);
+    };
+  }, [isTracking, user?._id]);
 
   const [status, setStatus] = useState('');
   const [error, setError] = useState('');
@@ -279,6 +303,83 @@ function DashboardPage() {
               </div>
             </div>
           )}
+
+          {/* Real-time Agent Reasoning Console */}
+          <div className="mt-5 border-t border-slate-100 pt-4">
+            <details className="group" open>
+              <summary className="flex items-center justify-between cursor-pointer list-none select-none">
+                <div className="flex items-center gap-2 text-sm font-semibold text-slate-800">
+                  <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                  <span>AI Safety Agent Reasoning Console</span>
+                </div>
+                <span className="text-xs font-semibold text-brand-600 hover:underline">
+                  Toggle Console Details
+                </span>
+              </summary>
+              
+              <div className="mt-4 grid gap-4 lg:grid-cols-2">
+                {/* Latest Cycle Execution */}
+                <div className="rounded-lg bg-slate-950 p-4 font-mono text-xs text-slate-300 shadow-inner border border-slate-850 flex flex-col justify-between min-h-[340px]">
+                  <div>
+                    <div className="flex items-center justify-between border-b border-slate-800 pb-2 mb-3">
+                      <span className="text-slate-400 font-bold tracking-wider uppercase text-[10px]">Active Reasoning Cycle</span>
+                      <span className="text-emerald-500 font-semibold animate-pulse text-[10px]">● LIVE FEED</span>
+                    </div>
+                    
+                    {reasoningLogs && reasoningLogs.length > 0 ? (
+                      <div className="space-y-3">
+                        {Object.entries({
+                          OBSERVATION: { text: reasoningLogs[reasoningLogs.length - 1].observation, color: 'text-cyan-400' },
+                          THOUGHT: { text: reasoningLogs[reasoningLogs.length - 1].thought, color: 'text-purple-400' },
+                          REASONING: { text: reasoningLogs[reasoningLogs.length - 1].reasoning, color: 'text-amber-400' },
+                          DECISION: { text: reasoningLogs[reasoningLogs.length - 1].decision, color: 'text-pink-400' },
+                          ACTION: { text: reasoningLogs[reasoningLogs.length - 1].action, color: 'text-blue-400' },
+                          RESULT: { text: reasoningLogs[reasoningLogs.length - 1].result, color: 'text-emerald-400' },
+                        }).map(([stage, details]) => (
+                          <div key={stage} className="border-l border-slate-800 pl-3 leading-relaxed">
+                            <span className={`font-bold uppercase text-[9px] ${details.color} block tracking-wider mb-0.5`}>
+                              {stage}
+                            </span>
+                            <span className="text-slate-200">{details.text}</span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-slate-500 italic py-20 text-center">Awaiting telemetry logs from Safety Agent...</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* History Logs */}
+                <div className="rounded-lg bg-slate-50 border border-slate-200 p-4 flex flex-col h-[340px]">
+                  <div className="flex items-center justify-between border-b border-slate-200 pb-2 mb-3 shrink-0">
+                    <span className="text-slate-600 font-bold tracking-wider uppercase text-[10px]">Execution Log History</span>
+                    <span className="text-slate-500 text-[10px] font-mono">({reasoningLogs.length} loops)</span>
+                  </div>
+
+                  <div className="overflow-y-auto flex-1 pr-1 space-y-2.5 max-h-[280px]">
+                    {reasoningLogs && reasoningLogs.length > 0 ? (
+                      [...reasoningLogs].reverse().map((log, idx) => (
+                        <div key={idx} className="rounded bg-white p-2.5 border border-slate-200 text-[11px] font-mono leading-relaxed shadow-sm">
+                          <div className="flex items-center justify-between text-slate-500 border-b border-slate-100 pb-1.5 mb-2">
+                            <span className="font-bold">LOOP #{reasoningLogs.length - idx}</span>
+                            <span>{new Date(log.timestamp).toLocaleTimeString()}</span>
+                          </div>
+                          <div className="space-y-1">
+                            <div><span className="text-cyan-600 font-bold uppercase text-[9px] mr-1">[OBS]</span> <span className="text-slate-700">{log.observation}</span></div>
+                            <div><span className="text-amber-600 font-bold uppercase text-[9px] mr-1">[REA]</span> <span className="text-slate-700">{log.reasoning}</span></div>
+                            <div><span className="text-emerald-600 font-bold uppercase text-[9px] mr-1">[OUT]</span> <span className="text-slate-700">{log.result}</span></div>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-slate-400 italic text-center py-20">No historical logs available.</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </details>
+          </div>
         </div>
       )}
 
