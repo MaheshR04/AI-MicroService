@@ -21,6 +21,37 @@ class SafetyAgent {
     }
 
     const memory = memoryManager.getMemory(userId);
+
+    // Phase 4: Handle safety check timeout escalation
+    if (memory.safetyCheckActive && memory.safetyCheckExpiresAt && new Date() > new Date(memory.safetyCheckExpiresAt)) {
+      memory.safetyCheckActive = false;
+      memory.stationaryDurationSeconds = 0; // reset stationary duration
+
+      const riskAnalysis = analyzeAllRisks(memory);
+      const autoEscalation = {
+        status: 'CRITICAL',
+        threatScore: 100,
+        reason: 'User failed to respond to autonomous AI Safety Check',
+        actionRequired: true,
+        autoActions: ['START_EMERGENCY_PROTOCOL'],
+        riskAnalysis,
+      };
+
+      await executeSafetyAction(userId, user, autoEscalation);
+
+      memoryManager.addReasoningLog(userId, {
+        observation: 'Safety check timed out without user confirmation.',
+        thought: 'User is unresponsive. Safety metrics forced to maximum.',
+        reasoning: 'Safety check timeout rules met. Escalating status to CRITICAL.',
+        decision: 'Escalate to Emergency Protocol.',
+        action: 'Trigger Twilio SMS Alerts & SOS Sockets.',
+        result: 'Emergency protocol successfully activated.',
+      });
+
+      this.broadcastReasoning(userId, user);
+      return;
+    }
+
     const latestLoc = memory.locationHistory[memory.locationHistory.length - 1];
     
     const lat = latestLoc?.latitude?.toFixed(5) || 'N/A';
@@ -43,7 +74,7 @@ class SafetyAgent {
     
     const reasoning = `Applying safety evaluation rules: Threat Score = Crime (${riskAnalysis.crime.score} * 1.0) + Battery (${riskAnalysis.battery} * 0.8) + Temporal (${riskAnalysis.temporal} * 0.5) + Deviation (${riskAnalysis.deviation} * 0.6) + Immobility (${riskAnalysis.immobility} * 1.0) = ${evaluation.threatScore}/100. Threat status classified as: ${evaluation.status}.`;
     
-    let decision = `Safety state is ${evaluation.status}. Active triggers: [${evaluation.triggers.join(', ') || 'None'}]. actionRequired flag set to: ${evaluation.actionRequired}.`;
+    let decision = `Safety state is ${evaluation.status}. Active triggers: [${evaluation.triggers.join(', ') || 'None'}]. Autonomous actions: [${evaluation.autoActions.join(', ') || 'None'}]. actionRequired flag set to: ${evaluation.actionRequired}.`;
 
     let action = 'No immediate action required';
     let result = 'HUD metrics updated. System remains normal.';

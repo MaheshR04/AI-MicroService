@@ -2,6 +2,7 @@ import Emergency from '../models/Emergency.model.js';
 import { sendEmergencySmsAlerts } from '../services/twilio.service.js';
 import { getIo } from '../sockets/index.js';
 import { getGuardianRoom, getUserRoom } from '../sockets/socketRooms.js';
+import { memoryManager } from './MemoryManager.js';
 
 export async function executeSafetyAction(userId, user, evaluation) {
   let io;
@@ -15,6 +16,63 @@ export async function executeSafetyAction(userId, user, evaluation) {
   const userRoom = getUserRoom(userId);
   const guardianRoom = getGuardianRoom(userId);
   const { status, threatScore, reason, riskAnalysis } = evaluation;
+
+  // Phase 4: Process Autonomous Decision Engine actions
+  const autoActions = evaluation.autoActions || [];
+  for (const action of autoActions) {
+    if (action === 'GENERATE_SAFE_ROUTE') {
+      io.to(userRoom).emit('agent-decision', {
+        userId,
+        type: 'GENERATE_SAFE_ROUTE',
+        reason: 'Threat score exceeded 70. Autonomously calculating safe detour routes.',
+      });
+    }
+
+    if (action === 'NOTIFY_GUARDIAN') {
+      io.to(guardianRoom).emit('agent-decision', {
+        userId,
+        type: 'NOTIFY_GUARDIAN',
+        reason: 'Risk critical (> 85). Executing notification protocols.',
+      });
+    }
+
+    if (action === 'SEND_BATTERY_WARNING') {
+      io.to(userRoom).emit('agent-decision', {
+        userId,
+        type: 'BATTERY_WARNING',
+        reason: 'Critically low battery (< 10%). Alerts are being automated.',
+        rawBatteryLevel: riskAnalysis?.rawBatteryLevel,
+      });
+      io.to(guardianRoom).emit('agent-decision', {
+        userId,
+        type: 'BATTERY_WARNING',
+        reason: `Tracked member ${user.name}'s phone battery is critically low (< 10%).`,
+        rawBatteryLevel: riskAnalysis?.rawBatteryLevel,
+      });
+    }
+
+    if (action === 'TRIGGER_SAFETY_CHECK') {
+      const memory = memoryManager.getMemory(userId);
+      if (!memory.safetyCheckActive) {
+        memory.safetyCheckActive = true;
+        memory.safetyCheckExpiresAt = new Date(Date.now() + 15 * 1000); // 15s countdown
+        
+        io.to(userRoom).emit('agent-decision', {
+          userId,
+          type: 'TRIGGER_SAFETY_CHECK',
+          reason: 'User stationary inside crime zone. Initiating safety prompt.',
+          durationSeconds: 15,
+        });
+
+        io.to(guardianRoom).emit('agent-decision', {
+          userId,
+          type: 'TRIGGER_SAFETY_CHECK',
+          reason: `AI is checking on ${user.name} due to prolonged immobility.`,
+          durationSeconds: 15,
+        });
+      }
+    }
+  }
 
   if (status === 'ADVISORY' || status === 'WARNING') {
     const payload = {

@@ -182,6 +182,7 @@ export function analyzeAllRisks(memory) {
   return {
     crime: crimeRisk,
     battery: batteryRisk,
+    rawBatteryLevel: battery?.level,
     temporal: temporalRisk,
     deviation: deviationRisk,
     movement,

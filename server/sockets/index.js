@@ -5,6 +5,7 @@ import { canTrackUser } from '../services/trackingAccess.service.js';
 import { verifyToken } from '../utils/jwt.js';
 import { getGuardianRoom, getUserRoom } from './socketRooms.js';
 import { safetyAgent } from '../agents/SafetyAgent.js';
+import { memoryManager } from '../agents/MemoryManager.js';
 
 let io;
 const connectedUsers = new Map();
@@ -189,6 +190,44 @@ export function initializeSocketServer(httpServer) {
         ...payload,
         createdAt: new Date().toISOString(),
       });
+    });
+
+    socket.on('confirm-safety', (payload = {}, ack) => {
+      const memory = memoryManager.getMemory(userId);
+      memory.safetyCheckActive = false;
+      memory.stationaryDurationSeconds = 0;
+
+      memoryManager.addReasoningLog(userId, {
+        observation: 'User safety check confirmed.',
+        thought: 'User explicitly clicked safety confirmation button.',
+        reasoning: 'Manual confirmation overrides stationary timer and immobility threats.',
+        decision: 'Clear active safety checks and reset stationary duration.',
+        action: 'Reset agent HUD metrics to NORMAL.',
+        result: 'User status successfully reset. Loop counters cleared.',
+      });
+
+      safetyAgent.broadcastReasoning(userId, user);
+
+      const payloadUpdate = {
+        userId,
+        name: user.name,
+        status: 'NORMAL',
+        threatScore: 0,
+        reason: 'User manually confirmed they are safe.',
+        movement: { status: memory.movementStatus || 'STATIONARY', speed: 0, stationaryDurationSeconds: 0 },
+        breakdown: { crime: 0, battery: 0, temporal: 0, deviation: 0, immobility: 0 },
+        timestamp: new Date().toISOString(),
+      };
+      io.to(userRoom).emit('agent-advisory', payloadUpdate);
+      io.to(guardianRoom).emit('agent-advisory', payloadUpdate);
+
+      io.to(userRoom).emit('agent-decision', {
+        userId,
+        type: 'SAFETY_CHECK_RESOLVED',
+        reason: 'Safety check successfully confirmed by user.',
+      });
+
+      ack?.({ success: true });
     });
 
     socket.on('disconnect', (reason) => {

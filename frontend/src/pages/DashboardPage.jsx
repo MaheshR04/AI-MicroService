@@ -13,6 +13,9 @@ import { fetchRouteAlternatives, searchDestinations } from '../services/routeSer
 import { analyzeCrimeRisk, getRiskToneClass } from '../utils/crimeRiskEngine.js';
 import { compareRoutes, formatDistance, formatDuration } from '../utils/routeComparison.js';
 import { fetchReasoningLogs } from '../services/trackingService.js';
+import { getSocket } from '../sockets/socketClient.js';
+import { activateSosRequest } from '../services/emergencyService.js';
+import { playDangerAlarm } from '../utils/alarmSound.js';
 
 const cards = [
   {
@@ -57,11 +60,64 @@ function DashboardPage() {
   const [guardianContacts, setGuardianContacts] = useState(user?.guardianContacts || []);
   const [agentTelemetry, setAgentTelemetry] = useState(null);
   const [reasoningLogs, setReasoningLogs] = useState([]);
+  const [safetyCheckActive, setSafetyCheckActive] = useState(false);
+  const [safetyCheckSecondsRemaining, setSafetyCheckSecondsRemaining] = useState(15);
+  const [batteryWarningActive, setBatteryWarningActive] = useState(false);
+  const [batteryWarningMessage, setBatteryWarningMessage] = useState('');
+  const [autoRerouteMessage, setAutoRerouteMessage] = useState('');
+
+  const handleConfirmSafety = () => {
+    const socket = getSocket(token);
+    if (socket && socket.connected) {
+      socket.emit('confirm-safety', {}, (ack) => {
+        if (ack?.success) {
+          setSafetyCheckActive(false);
+        }
+      });
+    } else {
+      setSafetyCheckActive(false);
+    }
+  };
+
+  const handleManualSosEscalation = async () => {
+    try {
+      setSafetyCheckActive(false);
+      const payload = {
+        message: 'SOS emergency activated (User manual escalation from Safety Check)',
+        location: {
+          latitude: location?.latitude || 19.076,
+          longitude: location?.longitude || 72.8777,
+          accuracy: location?.accuracy || null,
+          updatedAt: new Date().toISOString(),
+        },
+        riskLevel: dangerAssessment?.riskLevel || 'UNKNOWN',
+        riskScore: dangerAssessment?.riskScore || 0,
+      };
+      await activateSosRequest(payload);
+      
+      const socket = getSocket(token);
+      if (socket && socket.connected) {
+        socket.emit('sos-alert', {
+          location: payload.location,
+          riskLevel: payload.riskLevel,
+          riskScore: payload.riskScore,
+          message: payload.message,
+        });
+      }
+      
+      window.location.reload();
+    } catch (err) {
+      console.error('Failed manually escalating SOS:', err);
+    }
+  };
 
   useEffect(() => {
     if (!isTracking) {
       setAgentTelemetry(null);
       setReasoningLogs([]);
+      setSafetyCheckActive(false);
+      setBatteryWarningActive(false);
+      setAutoRerouteMessage('');
       return undefined;
     }
 
@@ -85,14 +141,77 @@ function DashboardPage() {
       }
     };
 
+    const handleDecision = async (event) => {
+      const decision = event.detail;
+      if (decision.userId !== user?._id) return;
+
+      if (decision.type === 'TRIGGER_SAFETY_CHECK') {
+        setSafetyCheckActive(true);
+        setSafetyCheckSecondsRemaining(decision.durationSeconds || 15);
+        playDangerAlarm();
+      }
+
+      if (decision.type === 'SAFETY_CHECK_RESOLVED') {
+        setSafetyCheckActive(false);
+      }
+
+      if (decision.type === 'BATTERY_WARNING') {
+        setBatteryWarningActive(true);
+        setBatteryWarningMessage(decision.reason);
+      }
+
+      if (decision.type === 'GENERATE_SAFE_ROUTE') {
+        if (location && selectedDestination) {
+          try {
+            setAutoRerouteMessage('High risk detected. Safety Agent is calculating safe detours...');
+            const alternatives = await fetchRouteAlternatives(location, selectedDestination);
+            const rankedRoutes = compareRoutes(alternatives);
+            setRoutes(rankedRoutes);
+            
+            const safest = rankedRoutes.find((r) => r.isSafest);
+            if (safest && safest.id !== selectedRouteId) {
+              setSelectedRouteId(safest.id);
+              setAutoRerouteMessage('AI Safety Agent has autonomously rerouted you to the safest path.');
+            }
+          } catch (err) {
+            console.error('Failed auto rerouting:', err);
+          }
+          setTimeout(() => setAutoRerouteMessage(''), 5500);
+        }
+      }
+    };
+
     window.addEventListener('agent-advisory', handleAdvisory);
     window.addEventListener('agent-reasoning', handleReasoning);
+    window.addEventListener('agent-decision', handleDecision);
 
     return () => {
       window.removeEventListener('agent-advisory', handleAdvisory);
       window.removeEventListener('agent-reasoning', handleReasoning);
+      window.removeEventListener('agent-decision', handleDecision);
     };
-  }, [isTracking, user?._id]);
+  }, [isTracking, user?._id, location, selectedDestination, selectedRouteId]);
+
+  useEffect(() => {
+    if (!safetyCheckActive) return undefined;
+    if (safetyCheckSecondsRemaining <= 0) {
+      setSafetyCheckActive(false);
+      setTimeout(() => window.location.reload(), 1000);
+      return undefined;
+    }
+
+    const timer = setInterval(() => {
+      setSafetyCheckSecondsRemaining((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [safetyCheckActive, safetyCheckSecondsRemaining]);
 
   const [status, setStatus] = useState('');
   const [error, setError] = useState('');
@@ -209,6 +328,21 @@ function DashboardPage() {
           </article>
         ))}
       </div>
+
+      {batteryWarningActive && (
+        <div className="mt-6 rounded-lg border border-amber-200 bg-amber-50 p-4 text-amber-900 shadow-soft flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <span className="text-amber-600 font-bold shrink-0 text-lg">⚠️</span>
+            <p className="text-sm font-semibold leading-relaxed">{batteryWarningMessage}</p>
+          </div>
+          <button
+            onClick={() => setBatteryWarningActive(false)}
+            className="text-xs font-bold text-amber-700 hover:underline shrink-0"
+          >
+            Dismiss Warning
+          </button>
+        </div>
+      )}
 
       {dangerAssessment.shouldAlert ? (
         <div className="mt-8 rounded-lg border border-red-200 bg-red-50 p-5 text-red-800 shadow-soft">
@@ -618,6 +752,51 @@ function DashboardPage() {
           {saving ? 'Saving contacts...' : 'Save Guardian Contacts'}
         </button>
       </form>
+
+      {safetyCheckActive && (
+        <div className="fixed inset-0 z-[2000] grid place-items-center bg-slate-950/80 px-4">
+          <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-2xl border border-red-200 text-center animate-pulse">
+            <span className="grid h-16 w-16 place-items-center rounded-full bg-red-100 text-red-600 mx-auto">
+              <AlertTriangle size={32} />
+            </span>
+            <h3 className="mt-5 text-2xl font-black text-slate-950">AI Safety Check</h3>
+            <p className="mt-3 text-sm text-slate-600 leading-relaxed">
+              You have remained stationary in a risk corridor. Please confirm you are safe.
+            </p>
+            
+            <div className="mt-6 text-4xl font-extrabold text-red-650 font-mono tracking-tight animate-bounce">
+              {safetyCheckSecondsRemaining}s
+            </div>
+            <p className="text-xs text-slate-400 mt-1 font-semibold">Remaining before autonomous SOS escalation</p>
+
+            <div className="mt-8 flex flex-col gap-3">
+              <button
+                type="button"
+                onClick={handleConfirmSafety}
+                className="w-full py-3.5 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white font-bold tracking-wide uppercase transition text-sm shadow-md"
+              >
+                🟢 I am Safe
+              </button>
+              <button
+                type="button"
+                onClick={handleManualSosEscalation}
+                className="w-full py-3 rounded-md bg-red-600 hover:bg-red-700 text-white font-bold tracking-wide uppercase transition text-xs shadow"
+              >
+                🚨 Trigger SOS Instantly
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {autoRerouteMessage && (
+        <div className="fixed bottom-5 right-5 z-[1500] max-w-sm rounded-lg bg-slate-900 text-white px-5 py-4 border border-brand-500 shadow-xl flex items-center gap-3">
+          <span className="shrink-0 text-brand-400 animate-pulse">
+            <Navigation size={20} />
+          </span>
+          <p className="text-xs font-semibold leading-relaxed">{autoRerouteMessage}</p>
+        </div>
+      )}
     </section>
   );
 }

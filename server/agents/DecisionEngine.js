@@ -1,5 +1,5 @@
 export function evaluateSafetyState(riskAnalysis) {
-  const { crime, battery, temporal, deviation, immobility, movement } = riskAnalysis;
+  const { crime, battery, rawBatteryLevel, temporal, deviation, immobility, movement } = riskAnalysis;
 
   // Weight contributions
   const crimeContribution = crime.score * 1.0;
@@ -47,11 +47,40 @@ export function evaluateSafetyState(riskAnalysis) {
     reason = `Travel threats identified: ${triggers.join(', ')}.`;
   }
 
+  // Phase 4: Autonomous Decisions Selection Rules
+  const autoActions = [];
+
+  if (totalThreat > 70) {
+    autoActions.push('GENERATE_SAFE_ROUTE');
+  }
+
+  if (totalThreat > 85) {
+    autoActions.push('NOTIFY_GUARDIAN');
+  }
+
+  const isLowBattery = rawBatteryLevel !== null && rawBatteryLevel !== undefined && rawBatteryLevel < 0.10;
+  if (isLowBattery) {
+    autoActions.push('SEND_BATTERY_WARNING');
+  }
+
+  const isStationaryCrime =
+    movement.status === 'STATIONARY' &&
+    crime.score > 0 &&
+    movement.stationaryDurationSeconds >= 30;
+  if (isStationaryCrime) {
+    autoActions.push('TRIGGER_SAFETY_CHECK');
+  }
+
+  if (status === 'CRITICAL') {
+    autoActions.push('START_EMERGENCY_PROTOCOL');
+  }
+
   return {
     status,
     threatScore: totalThreat,
     reason,
     actionRequired,
+    autoActions,
     riskAnalysis,
   };
 }
