@@ -6,6 +6,7 @@ import { verifyToken } from '../utils/jwt.js';
 import { getGuardianRoom, getUserRoom } from './socketRooms.js';
 import { safetyAgent } from '../agents/SafetyAgent.js';
 import { memoryManager } from '../agents/MemoryManager.js';
+import { toolExecutor } from '../agents/ToolExecutor.js';
 
 let io;
 const connectedUsers = new Map();
@@ -228,6 +229,54 @@ export function initializeSocketServer(httpServer) {
       });
 
       ack?.({ success: true });
+    });
+
+    socket.on('request-routes', async (payload = {}, ack) => {
+      const { origin, destination } = payload;
+      if (!origin || !destination) {
+        return ack?.({ success: false, message: 'Origin and destination are required' });
+      }
+
+      memoryManager.updateDestination(userId, destination);
+
+      try {
+        const res = await toolExecutor.execute('generate_safe_route', {
+          userId,
+          origin,
+          destination,
+          reason: 'User requested safe routes to destination.',
+        }, { userId, user });
+
+        ack?.(res);
+      } catch (err) {
+        console.error('Socket request-routes error:', err);
+        ack?.({ success: false, error: err.message });
+      }
+    });
+
+    socket.on('select-route', (payload = {}, ack) => {
+      const { routeId } = payload;
+      if (!routeId) {
+        return ack?.({ success: false, message: 'Route ID is required' });
+      }
+
+      const memory = memoryManager.getMemory(userId);
+      const chosenRoute = memory.routes?.find((r) => r.id === routeId);
+      if (chosenRoute) {
+        memory.activeRoute = chosenRoute;
+        
+        // Also emit to guardian room so they are sync'd
+        io.to(guardianRoom).emit('agent-routes-updated', {
+          userId,
+          routes: memory.routes,
+          selectedRouteId: routeId,
+          reason: `User selected active route ${routeId}`,
+        });
+
+        ack?.({ success: true, activeRoute: chosenRoute });
+      } else {
+        ack?.({ success: false, message: 'Route not found in memory history' });
+      }
     });
 
     socket.on('disconnect', (reason) => {

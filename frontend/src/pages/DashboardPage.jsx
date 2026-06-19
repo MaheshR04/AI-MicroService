@@ -85,6 +85,14 @@ function DashboardPage() {
     }
   };
 
+  const handleSelectRoute = (routeId) => {
+    setSelectedRouteId(routeId);
+    const socket = getSocket(token);
+    if (socket && socket.connected) {
+      socket.emit('select-route', { routeId });
+    }
+  };
+
   const handleManualSosEscalation = async () => {
     try {
       setSafetyCheckActive(false);
@@ -167,34 +175,31 @@ function DashboardPage() {
       }
 
       if (decision.type === 'GENERATE_SAFE_ROUTE') {
-        if (location && selectedDestination) {
-          try {
-            setAutoRerouteMessage('High risk detected. Safety Agent is calculating safe detours...');
-            const alternatives = await fetchRouteAlternatives(location, selectedDestination);
-            const rankedRoutes = compareRoutes(alternatives);
-            setRoutes(rankedRoutes);
-            
-            const safest = rankedRoutes.find((r) => r.isSafest);
-            if (safest && safest.id !== selectedRouteId) {
-              setSelectedRouteId(safest.id);
-              setAutoRerouteMessage('AI Safety Agent has autonomously rerouted you to the safest path.');
-            }
-          } catch (err) {
-            console.error('Failed auto rerouting:', err);
-          }
-          setTimeout(() => setAutoRerouteMessage(''), 5500);
-        }
+        setAutoRerouteMessage('High risk detected. Recalculating safest route options...');
+        setTimeout(() => setAutoRerouteMessage(''), 5500);
       }
+    };
+
+    const handleRoutesUpdated = (event) => {
+      const { userId: routesUserId, routes: newRoutes, selectedRouteId: newSelectedId } = event.detail;
+      if (routesUserId !== user?._id) return;
+      setRoutes(newRoutes);
+      setSelectedRouteId(newSelectedId);
+      playDangerAlarm();
+      setAutoRerouteMessage('AI Safety Agent has autonomously rerouted you to the safest path.');
+      setTimeout(() => setAutoRerouteMessage(''), 5500);
     };
 
     window.addEventListener('agent-advisory', handleAdvisory);
     window.addEventListener('agent-reasoning', handleReasoning);
     window.addEventListener('agent-decision', handleDecision);
+    window.addEventListener('agent-routes-updated', handleRoutesUpdated);
 
     return () => {
       window.removeEventListener('agent-advisory', handleAdvisory);
       window.removeEventListener('agent-reasoning', handleReasoning);
       window.removeEventListener('agent-decision', handleDecision);
+      window.removeEventListener('agent-routes-updated', handleRoutesUpdated);
     };
   }, [isTracking, user?._id, location, selectedDestination, selectedRouteId]);
 
@@ -296,16 +301,22 @@ function DashboardPage() {
 
     setRouteLoading(true);
 
-    try {
-      const alternatives = await fetchRouteAlternatives(location, selectedDestination);
-      const rankedRoutes = compareRoutes(alternatives);
-      setRoutes(rankedRoutes);
-      setSelectedRouteId(rankedRoutes[0]?.id || '');
-      setRouteStatus(`${rankedRoutes.length} route option${rankedRoutes.length === 1 ? '' : 's'} generated.`);
-    } catch (requestError) {
-      setRouteError(requestError.message || 'Unable to generate routes.');
-    } finally {
+    const socket = getSocket(token);
+    if (socket && socket.connected) {
+      socket.emit('request-routes', {
+        origin: { latitude: location.latitude, longitude: location.longitude },
+        destination: selectedDestination,
+      }, (response) => {
+        setRouteLoading(false);
+        if (response?.status === 'SUCCESS' || response?.success) {
+          setRouteStatus('Safe routes recalculated by AI Agent.');
+        } else {
+          setRouteError(response?.error || 'Unable to generate routes via Safety Agent.');
+        }
+      });
+    } else {
       setRouteLoading(false);
+      setRouteError('Tracking connection offline. Safe routes calculation unavailable.');
     }
   };
 
@@ -728,7 +739,7 @@ function DashboardPage() {
               <button
                 key={route.id}
                 type="button"
-                onClick={() => setSelectedRouteId(route.id)}
+                onClick={() => handleSelectRoute(route.id)}
                 className={`rounded-lg border p-4 text-left transition ${
                   route.id === selectedRouteId
                     ? 'border-brand-500 bg-brand-50'

@@ -5,6 +5,7 @@ import { getIo } from '../sockets/index.js';
 import { getUserRoom, getGuardianRoom } from '../sockets/socketRooms.js';
 import Emergency from '../models/Emergency.model.js';
 import { sendEmergencySmsAlerts } from '../services/twilio.service.js';
+import { evaluateRoutes } from './RouteEvaluationEngine.js';
 
 export function registerAllTools() {
   // 1. Location Tool
@@ -48,26 +49,100 @@ export function registerAllTools() {
   // 3. Navigation Tool
   toolExecutor.registerTool(
     'generate_safe_route',
-    'Autonomously trigger safe route recalculated detour proposals on the user\'s client HUD maps.',
+    'Autonomously calculate, evaluate, and dynamically push safe detour alternatives and routes to clients.',
     {
       type: 'object',
       properties: {
         userId: { type: 'string', description: 'ID of the user' },
+        origin: {
+          type: 'object',
+          properties: {
+            latitude: { type: 'number' },
+            longitude: { type: 'number' },
+          },
+          required: ['latitude', 'longitude'],
+        },
+        destination: {
+          type: 'object',
+          properties: {
+            latitude: { type: 'number' },
+            longitude: { type: 'number' },
+            label: { type: 'string' },
+          },
+          required: ['latitude', 'longitude'],
+        },
         reason: { type: 'string', description: 'Reason for recalculation' },
       },
       required: ['userId'],
     },
     async (args, context) => {
       const userId = args.userId || context.userId;
+      const memory = memoryManager.getMemory(userId);
+
+      const origin = args.origin || context.location || (memory.locationHistory && memory.locationHistory[memory.locationHistory.length - 1]);
+      const destination = args.destination || memory.destination;
+
+      if (!origin || !destination) {
+        return { success: false, message: 'Origin and destination are required for safe route generation.' };
+      }
+
+      const OSRM_BASE_URL = 'https://router.project-osrm.org/route/v1/driving';
+      const coordinates = `${origin.longitude},${origin.latitude};${destination.longitude},${destination.latitude}`;
+      const url = `${OSRM_BASE_URL}/${coordinates}?alternatives=true&overview=full&geometries=geojson&steps=true`;
+
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`OSRM service error: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      if (data.code !== 'Ok' || !data.routes?.length) {
+        throw new Error('No route paths resolved by routing API.');
+      }
+
+      const rawRoutes = data.routes.map((route, index) => ({
+        id: `route-${index + 1}`,
+        distance: route.distance,
+        duration: route.duration,
+        geometry: route.geometry.coordinates.map(([longitude, latitude]) => [latitude, longitude]),
+        steps: route.legs?.flatMap((leg) => leg.steps || []) || [],
+      }));
+
+      const evaluatedRoutes = evaluateRoutes(rawRoutes);
+      memory.routes = evaluatedRoutes;
+
+      const safest = evaluatedRoutes.find((r) => r.isSafest);
+      if (safest) {
+        memory.activeRoute = safest;
+      }
+
+      // Automatically store destination in memory as well
+      memory.destination = {
+        latitude: destination.latitude,
+        longitude: destination.longitude,
+        label: destination.label || 'Recalculated Destination',
+      };
+
       const io = getIo();
       const userRoom = getUserRoom(userId);
+      const guardianRoom = getGuardianRoom(userId);
 
-      io.to(userRoom).emit('agent-decision', {
+      const routesUpdatePayload = {
         userId,
-        type: 'GENERATE_SAFE_ROUTE',
-        reason: args.reason || 'Safety Agent has initiated safe detour route generation.',
-      });
-      return { success: true, message: 'Safe route generation socket emitted to user client.' };
+        routes: evaluatedRoutes,
+        selectedRouteId: safest?.id || '',
+        reason: args.reason || 'Safety Agent has recalculated safe detour route options.',
+      };
+
+      io.to(userRoom).emit('agent-routes-updated', routesUpdatePayload);
+      io.to(guardianRoom).emit('agent-routes-updated', routesUpdatePayload);
+
+      return {
+        success: true,
+        routesCount: evaluatedRoutes.length,
+        safestRouteId: safest?.id || '',
+        message: 'Safe routes calculated and pushed to clients.',
+      };
     }
   );
 

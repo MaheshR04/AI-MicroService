@@ -47,10 +47,10 @@ export function evaluateSafetyState(riskAnalysis) {
     reason = `Travel threats identified: ${triggers.join(', ')}.`;
   }
 
-  // Phase 4: Autonomous Decisions Selection Rules
+  // Phase 4 & 6: Autonomous Decisions Selection Rules
   const autoActions = [];
 
-  if (totalThreat > 70) {
+  if (totalThreat > 70 || deviation > 0) {
     autoActions.push('GENERATE_SAFE_ROUTE');
   }
 

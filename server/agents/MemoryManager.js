@@ -10,6 +10,7 @@ class MemoryManager {
         locationHistory: [],
         battery: { level: null, charging: null },
         activeRoute: null,
+        destination: null,
         reflections: [],
         movementStatus: 'UNKNOWN',
         stationaryDurationSeconds: 0,
@@ -107,6 +108,12 @@ class MemoryManager {
   getToolCalls(userId) {
     const memory = this.getMemory(userId);
     return memory.toolCalls || [];
+  }
+
+  updateDestination(userId, destination) {
+    const memory = this.getMemory(userId);
+    memory.destination = destination || null;
+    memory.lastUpdated = new Date();
   }
 
   clearMemory(userId) {
