@@ -16,6 +16,12 @@ import {
 
 export default function ManagerDashboard() {
   const [activeTab, setActiveTab] = useState('Tickets');
+  const [liveTickets, setLiveTickets] = useState([
+    { id: 'CX-4912', customer: 'Microsoft (Enterprise)', agent: 'Billing Specialist', action: 'Refund Issued ($199)', status: 'Success', time: 'Just now', sentiment: 'Positive' },
+    { id: 'CX-4911', customer: 'Stripe API', agent: 'Setup Specialist', action: 'Webhook Reset', status: 'Success', time: '2m ago', sentiment: 'Neutral' },
+    { id: 'CX-4910', customer: 'Zoom Inc.', agent: 'Billing Specialist', action: 'Escalated: Refund Limit Exceeded', status: 'Escalated', time: '5m ago', sentiment: 'Negative' },
+    { id: 'CX-4909', customer: 'Vercel Customer', agent: 'DNS Specialist', action: 'Custom Domain Bound', status: 'Success', time: '11m ago', sentiment: 'Positive' },
+  ]);
 
   const recentCustomers = [
     { name: 'Sarah Jenkins', company: 'Microsoft Corp', tier: 'Gold SLA', health: 'Healthy', status: 'Active' },

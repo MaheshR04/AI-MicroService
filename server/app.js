@@ -1,18 +1,34 @@
 const express = require('express');
 const cors = require('cors');
-const dotenv = require('dotenv');
-
-dotenv.config();
+const helmet = require('helmet');
+const compression = require('compression');
+const morgan = require('morgan');
+const cookieParser = require('cookie-parser');
+const requestLogger = require('./middleware/requestLogger');
+const errorHandler = require('./middleware/errorHandler');
+const notFound = require('./middleware/notFound');
+const responseFormatter = require('./middleware/responseFormatter');
+const apiRouter = require('./routes');
 
 const app = express();
 
-// Middlewares
+// Security Middlewares
+app.use(helmet());
 app.use(cors({
   origin: process.env.CLIENT_URL || 'http://localhost:5173',
   credentials: true
 }));
+
+// Performance & Parsing Middlewares
+app.use(compression());
+app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(responseFormatter);
+
+// Loggers
+app.use(morgan('dev'));
+app.use(requestLogger);
 
 // Health Check Route
 app.get('/api/health', (req, res) => {
@@ -23,18 +39,13 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Main routing entry point
-// Future routes:
-// app.use('/api/auth', require('./routes/auth'));
-// app.use('/api/emergencies', require('./routes/emergencies'));
+// Route Gateway Dispatcher
+app.use('/api/v1', apiRouter);
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({
-    success: false,
-    message: err.message || 'Internal Server Error'
-  });
-});
+// 404 Route Handler
+app.use(notFound);
+
+// Centralized Error Handler
+app.use(errorHandler);
 
 module.exports = app;

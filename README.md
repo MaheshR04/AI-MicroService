@@ -6,11 +6,13 @@ Enterprise CX Guardian AI is a state-of-the-art real-time safety navigation and 
 ```text
 Enterprise-CX-Guardian-AI/
 │
-├── client/          # React frontend (Vite-powered)
-├── server/          # Express backend (Modular MVC, Socket.IO & MongoDB)
-├── docs/            # Architecture diagrams, pitch deck, and design documents
-├── README.md        # This file
-└── .gitignore       # Root gitignore rules
+├── client/              # React frontend (Vite-powered)
+├── server/              # Express backend (Modular MVC, Socket.IO & MongoDB)
+├── ai-service/          # Python AI / ML service for safety insights
+├── docs/                # Architecture diagrams, pitch deck, and design documents
+├── docker-compose.yml   # Multi-container orchestration (Later)
+├── README.md            # This file
+└── .gitignore           # Root gitignore rules
 ```
 
 ## Features

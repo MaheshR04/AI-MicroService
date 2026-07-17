@@ -1,8 +1,11 @@
 const http = require('http');
 const app = require('./app');
 const { Server } = require('socket.io');
+const config = require('./config');
+const { connectDatabase, disconnectDatabase } = require('./database/connection');
 
-const PORT = process.env.PORT || 5000;
+// Connect Database
+connectDatabase();
 
 // Create HTTP server
 const server = http.createServer(app);
@@ -10,7 +13,7 @@ const server = http.createServer(app);
 // Initialize Socket.IO with CORS
 const io = new Server(server, {
   cors: {
-    origin: process.env.CLIENT_URL || 'http://localhost:5173',
+    origin: config.CLIENT_URL,
     methods: ['GET', 'POST'],
     credentials: true
   }
@@ -18,14 +21,42 @@ const io = new Server(server, {
 
 // Socket connection handler
 io.on('connection', (socket) => {
-  console.log(`User connected: ${socket.id}`);
-
+  console.log(`[Socket] User connected: ${socket.id}`);
   socket.on('disconnect', () => {
-    console.log(`User disconnected: ${socket.id}`);
+    console.log(`[Socket] User disconnected: ${socket.id}`);
   });
 });
 
 // Start Server
-server.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+server.listen(config.PORT, () => {
+  console.log(`[Server] running in ${config.NODE_ENV} mode on port ${config.PORT}`);
 });
+
+// GRACEFUL SHUTDOWN HANDLER
+const handleShutdown = (signal) => {
+  console.log(`[Server] Received ${signal}. Initiating graceful shutdown...`);
+
+  // Close HTTP server
+  server.close(async () => {
+    console.log('[Server] HTTP and Socket.IO servers closed.');
+    
+    try {
+      await disconnectDatabase();
+      console.log('[Server] Graceful shutdown completed. Exiting.');
+      process.exit(0);
+    } catch (err) {
+      console.error(`[Shutdown Error] Failed during database closure: ${err.message}`);
+      process.exit(1);
+    }
+  });
+
+  // Force close after 10s timeout
+  setTimeout(() => {
+    console.error('[Server] Shutdown timed out. Forcing exit.');
+    process.exit(1);
+  }, 10000);
+};
+
+// Listen to system signals
+process.on('SIGTERM', () => handleShutdown('SIGTERM'));
+process.on('SIGINT', () => handleShutdown('SIGINT'));
