@@ -1,57 +1,84 @@
-import React, { useState } from 'react';
-import { NavLink, Outlet, useLocation } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, 
-  GitFork, 
-  Brain, 
-  Cpu, 
   Settings2, 
   Search, 
   Bell, 
   ChevronLeft, 
   ChevronRight,
   ShieldCheck,
-  UserCheck2,
-  HelpCircle
+  UserCheck,
+  HelpCircle,
+  BarChart4,
+  Ticket,
+  MessageSquare,
+  Sun,
+  Moon,
+  LogOut,
+  User
 } from 'lucide-react';
 
 export default function AppLayout() {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [notifications, setNotifications] = useState([
     { id: 1, text: "Billing Guardian auto-resolved payment dispute", type: "success" },
     { id: 2, text: "Customer sentiment drop flagged on Ticket #4912", type: "warning" },
   ]);
-  const [showNotifications, setShowNotifications] = useState(false);
+  
   const location = useLocation();
+  const navigate = useNavigate();
 
-  // Helper to map route to a title
+  // Initialize dark mode class on render
+  useEffect(() => {
+    const isDark = document.documentElement.classList.contains('dark');
+    setIsDarkMode(isDark);
+  }, []);
+
+  const toggleTheme = () => {
+    setIsDarkMode(!isDarkMode);
+    if (!isDarkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  };
+
   const getPageTitle = () => {
     switch (location.pathname) {
-      case '/':
+      case '/dashboard':
         return 'Executive Overview';
-      case '/builder':
-        return 'Autonomous Workflow Builder';
-      case '/reasoning':
-        return 'Reasoning Engine & Explainability Hub';
-      case '/agents':
-        return 'Autonomous Agent Monitor';
-      case '/integrations':
-        return 'CRM & System Integrations';
+      case '/chat':
+        return 'AI Assistant Conversation';
+      case '/customer360':
+        return 'Customer 360 Profile';
+      case '/tickets':
+        return 'Ticket Management Panel';
+      case '/analytics':
+        return 'Performance Analytics';
+      case '/settings':
+        return 'Platform Settings';
       default:
-        return 'CX Guardian Console';
+        return 'Console Console';
     }
   };
 
   const navItems = [
-    { to: '/', label: 'Executive Dashboard', icon: LayoutDashboard },
-    { to: '/builder', label: 'Workflow Builder', icon: GitFork },
-    { to: '/reasoning', label: 'Reasoning Hub', icon: Brain },
-    { to: '/agents', label: 'Agent Monitor', icon: Cpu },
-    { to: '/integrations', label: 'Integrations', icon: Settings2 },
+    { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { to: '/chat', label: 'AI Assistant', icon: MessageSquare },
+    { to: '/customer360', label: 'Customer 360', icon: UserCheck },
+    { to: '/tickets', label: 'Tickets', icon: Ticket },
+    { to: '/analytics', label: 'Analytics', icon: BarChart4 },
+    { to: '/settings', label: 'Settings', icon: Settings2 },
   ];
 
   return (
-    <div className="flex h-screen bg-slate-50 overflow-hidden font-sans">
+    <div className={`flex h-screen overflow-hidden font-sans transition-colors duration-200 ${
+      isDarkMode ? 'bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-800'
+    }`}>
       
       {/* SIDEBAR NAVIGATION */}
       <aside 
@@ -71,7 +98,7 @@ export default function AppLayout() {
                   CX GUARDIAN AI
                 </span>
                 <span className="text-[10px] text-slate-400 font-semibold tracking-wider uppercase">
-                  Enterprise Agent
+                  Enterprise Autopilot
                 </span>
               </div>
             )}
@@ -132,44 +159,66 @@ export default function AppLayout() {
       <div className="flex-1 flex flex-col overflow-hidden">
         
         {/* TOP NAVBAR */}
-        <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 shrink-0 z-40">
+        <header className={`h-16 border-b flex items-center justify-between px-6 shrink-0 z-40 transition-colors ${
+          isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
+        }`}>
           <div className="flex items-center gap-4">
-            <h2 className="text-lg font-bold text-slate-900 tracking-tight">
+            <h2 className={`text-lg font-bold tracking-tight ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
               {getPageTitle()}
             </h2>
             <div className="hidden lg:flex items-center gap-2 px-3 py-1 bg-emerald-50 text-accentemerald rounded-full border border-emerald-100 text-xs font-semibold">
               <span className="w-1.5 h-1.5 bg-accentemerald rounded-full animate-ping"></span>
-              4 Agents Autonomous
+              Autopilot Active
             </div>
           </div>
 
           <div className="flex items-center gap-4">
+            
             {/* SEARCH */}
             <div className="relative hidden md:block w-64">
               <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
               <input
                 type="text"
-                placeholder="Search reasoning logs, nodes..."
-                className="w-full bg-slate-50 border border-slate-200 pl-9 pr-4 py-1.5 rounded-lg text-xs outline-none focus:bg-white focus:border-primary transition-all duration-200"
+                placeholder="Search resources, logs..."
+                className={`w-full border pl-9 pr-4 py-1.5 rounded-lg text-xs outline-none transition-all duration-200 ${
+                  isDarkMode 
+                    ? 'bg-slate-800 border-slate-700 text-white focus:bg-slate-800/80 focus:border-primary' 
+                    : 'bg-slate-50 border-slate-200 text-slate-800 focus:bg-white focus:border-primary'
+                }`}
               />
             </div>
+
+            {/* THEME TOGGLE */}
+            <button
+              onClick={toggleTheme}
+              className={`p-2 rounded-full border cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors ${
+                isDarkMode ? 'border-slate-800 text-yellow-400' : 'border-slate-200 text-slate-500'
+              }`}
+              title="Toggle Theme"
+            >
+              {isDarkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            </button>
 
             {/* NOTIFICATIONS */}
             <div className="relative">
               <button 
                 onClick={() => setShowNotifications(!showNotifications)}
-                className="p-2 text-slate-500 hover:bg-slate-100 rounded-full transition-colors relative cursor-pointer"
+                className={`p-2 rounded-full border cursor-pointer transition-colors relative ${
+                  isDarkMode ? 'border-slate-800 text-slate-400 hover:bg-slate-800' : 'border-slate-200 text-slate-500 hover:bg-slate-100'
+                }`}
               >
-                <Bell className="w-5 h-5" />
+                <Bell className="w-4 h-4" />
                 {notifications.length > 0 && (
-                  <span className="absolute top-1 right-1 w-2 h-2 bg-accentred rounded-full"></span>
+                  <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-accentred rounded-full"></span>
                 )}
               </button>
 
               {showNotifications && (
-                <div className="absolute right-0 mt-2 w-80 bg-white border border-slate-200 rounded-xl shadow-xl py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
-                  <div className="px-4 py-1.5 border-b border-slate-100 flex justify-between items-center">
-                    <span className="text-xs font-bold text-slate-800">System Logs</span>
+                <div className={`absolute right-0 mt-2 w-80 border rounded-xl shadow-xl py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200 ${
+                  isDarkMode ? 'bg-slate-900 border-slate-800 text-slate-300 shadow-black/40' : 'bg-white border-slate-200 text-slate-800'
+                }`}>
+                  <div className="px-4 py-1.5 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
+                    <span className="text-xs font-bold">System Alerts</span>
                     <button 
                       onClick={() => setNotifications([])}
                       className="text-[10px] text-primary hover:underline"
@@ -180,15 +229,15 @@ export default function AppLayout() {
                   <div className="max-h-60 overflow-y-auto">
                     {notifications.length === 0 ? (
                       <div className="px-4 py-6 text-center text-xs text-slate-400">
-                        No system flags reported
+                        No active alerts
                       </div>
                     ) : (
                       notifications.map(notif => (
-                        <div key={notif.id} className="px-4 py-3 hover:bg-slate-50 border-b border-slate-50 last:border-b-0 flex items-start gap-2.5">
+                        <div key={notif.id} className="px-4 py-3 hover:bg-slate-50/50 dark:hover:bg-slate-800/50 border-b border-slate-50 dark:border-slate-800 last:border-b-0 flex items-start gap-2.5">
                           <span className={`w-1.5 h-1.5 rounded-full mt-1.5 ${
                             notif.type === 'success' ? 'bg-accentemerald' : 'bg-accentorange'
                           }`}></span>
-                          <span className="text-[11px] text-slate-600 leading-normal">{notif.text}</span>
+                          <span className="text-[11px] leading-normal">{notif.text}</span>
                         </div>
                       ))
                     )}
@@ -197,18 +246,54 @@ export default function AppLayout() {
               )}
             </div>
 
-            <div className="h-6 w-px bg-slate-200"></div>
+            <div className={`h-6 w-px ${isDarkMode ? 'bg-slate-850' : 'bg-slate-200'}`}></div>
 
-            {/* Help / Platform Status */}
-            <div className="flex items-center gap-1 text-slate-500 text-xs font-medium">
-              <HelpCircle className="w-4 h-4" />
-              <span className="hidden sm:inline">Help Center</span>
+            {/* PROFILE MENU */}
+            <div className="relative">
+              <button 
+                onClick={() => setShowProfileMenu(!showProfileMenu)}
+                className="flex items-center gap-2 cursor-pointer focus:outline-none"
+              >
+                <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-xs font-bold text-white uppercase">
+                  AD
+                </div>
+              </button>
+
+              {showProfileMenu && (
+                <div className={`absolute right-0 mt-2 w-48 border rounded-xl shadow-xl py-1 z-50 ${
+                  isDarkMode ? 'bg-slate-900 border-slate-800 text-slate-350 shadow-black/40' : 'bg-white border-slate-200 text-slate-800'
+                }`}>
+                  <div className="px-4 py-2 border-b border-slate-100 dark:border-slate-800">
+                    <span className="text-xs font-bold block">Administrator</span>
+                    <span className="text-[9px] text-slate-400 block">guardian@company.com</span>
+                  </div>
+                  
+                  <NavLink 
+                    to="/settings" 
+                    onClick={() => setShowProfileMenu(false)}
+                    className="flex items-center gap-2 px-4 py-2 text-xs hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                  >
+                    <User className="w-4 h-4 text-slate-400" /> My Profile
+                  </NavLink>
+                  
+                  <NavLink 
+                    to="/login" 
+                    onClick={() => setShowProfileMenu(false)}
+                    className="flex items-center gap-2 px-4 py-2 text-xs hover:bg-slate-50 dark:hover:bg-slate-800 text-accentred transition-colors border-t border-slate-105 dark:border-slate-800"
+                  >
+                    <LogOut className="w-4 h-4" /> Sign Out
+                  </NavLink>
+                </div>
+              )}
             </div>
+
           </div>
         </header>
 
         {/* CONTAINER FOR OUTLET */}
-        <main className="flex-1 overflow-y-auto bg-slate-50 p-6">
+        <main className={`flex-1 overflow-y-auto p-6 ${
+          isDarkMode ? 'bg-slate-950' : 'bg-slate-50'
+        }`}>
           <Outlet />
         </main>
       </div>

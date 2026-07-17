@@ -8,16 +8,35 @@ import {
   ArrowUpRight, 
   AlertTriangle,
   Play,
-  Cpu
+  Cpu,
+  Users,
+  Ticket,
+  Smile
 } from 'lucide-react';
 
 export default function ManagerDashboard() {
-  const [liveTickets, setLiveTickets] = useState([
-    { id: 'CX-4912', customer: 'Microsoft (Enterprise)', agent: 'Billing Specialist', action: 'Refund Issued ($199)', status: 'Success', time: 'Just now', sentiment: 'Positive' },
-    { id: 'CX-4911', customer: 'Stripe API', agent: 'Setup Specialist', action: 'Webhook Reset', status: 'Success', time: '2m ago', sentiment: 'Neutral' },
-    { id: 'CX-4910', customer: 'Zoom Inc.', agent: 'Billing Specialist', action: 'Escalated: Refund Limit Exceeded', status: 'Escalated', time: '5m ago', sentiment: 'Negative' },
-    { id: 'CX-4909', customer: 'Vercel Customer', agent: 'DNS Specialist', action: 'Custom Domain Bound', status: 'Success', time: '11m ago', sentiment: 'Positive' },
-  ]);
+  const [activeTab, setActiveTab] = useState('Tickets');
+
+  const recentCustomers = [
+    { name: 'Sarah Jenkins', company: 'Microsoft Corp', tier: 'Gold SLA', health: 'Healthy', status: 'Active' },
+    { name: 'David Miller', company: 'Stripe API', tier: 'Platinum SLA', health: 'Healthy', status: 'Active' },
+    { name: 'Jessica Chen', company: 'Zoom Inc.', tier: 'Silver Tier', health: 'At Risk', status: 'Active' },
+    { name: 'Andrew Larson', company: 'Vercel Sandbox', tier: 'Gold SLA', health: 'Healthy', status: 'Active' },
+  ];
+
+  const aiDecisions = [
+    { decisionId: 'DEC-9102', action: 'Approved dispute seat refund ch_1941a', agent: 'Billing Specialist', confidence: '98.4%', status: 'Synced' },
+    { decisionId: 'DEC-9101', action: 'DNS configuration trace validated', agent: 'DNS Specialist', confidence: '95.0%', status: 'Synced' },
+    { decisionId: 'DEC-9100', action: 'Escalated refund request over $1000 limit', agent: 'Refund Gatekeeper', confidence: '45.0%', status: 'Manual Takeover' },
+    { decisionId: 'DEC-9099', action: 'Deactivated temporary MFA token dispatch', agent: 'Security Agent', confidence: '99.1%', status: 'Synced' },
+  ];
+
+  const recentActivities = [
+    { description: 'Synchronized contact structures with HubSpot deals', component: 'HubSpot pipeline', date: '5m ago', result: 'Success' },
+    { description: 'Refreshed access credentials for Zendesk connector', component: 'Zendesk agent link', date: '35m ago', result: 'Success' },
+    { description: 'Concluded DNS ALIAS diagnostic dig trace', component: 'Technical sandbox', date: '1h ago', result: 'Success' },
+    { description: 'Initialized active directories user mapping sync', component: 'Active Directory link', date: '4h ago', result: 'Success' },
+  ];
 
   const navigate = useNavigate();
 
@@ -38,10 +57,14 @@ export default function ManagerDashboard() {
   }, []);
 
   const stats = [
-    { label: 'Autonomous Resolutions', value: '84.6%', change: '+3.2% vs yesterday', icon: CheckCircle2, color: 'text-accentemerald bg-emerald-50' },
-    { label: 'AI Agent Handling Time', value: '11.8s', change: 'Human average: 14.5m', icon: Clock, color: 'text-primary bg-blue-50' },
-    { label: 'Active Sessions', value: '142', change: 'Processing peak loads', icon: Activity, color: 'text-primary bg-indigo-50' },
-    { label: 'Explainable Reasoning Runs', value: '19,410', change: '100% Chain-of-Thought logged', icon: Brain, color: 'text-accentorange bg-amber-50' },
+    { label: 'Total Customers', value: '14,291', change: 'Microsoft, Stripe, Zoom +', icon: Users, color: 'text-sky-600 bg-sky-50 dark:bg-sky-950/20' },
+    { label: 'Open Tickets', value: '1,924', change: 'Escalated to human backup', icon: Ticket, color: 'text-accentred bg-red-50 dark:bg-red-950/20' },
+    { label: 'Resolved Tickets', value: '12,366', change: 'Auto-closed this cycle', icon: CheckCircle2, color: 'text-accentemerald bg-emerald-50 dark:bg-emerald-950/20' },
+    { label: 'Customer Satisfaction', value: '4.8 / 5.0', change: '96.8% approval CSAT', icon: Smile, color: 'text-primary bg-indigo-50 dark:bg-indigo-950/20' },
+    { label: 'AI Resolution Rate', value: '84.6%', change: '+3.2% vs yesterday', icon: Cpu, color: 'text-purple-600 bg-purple-50 dark:bg-purple-950/20' },
+    { label: 'Average Response Time', value: '11.8s', change: 'Human average: 14.5m', icon: Clock, color: 'text-primary bg-blue-50 dark:bg-blue-950/20' },
+    { label: 'Churn Risk', value: '1.2%', change: 'Lowest sector churn rate', icon: AlertTriangle, color: 'text-accentorange bg-amber-50 dark:bg-amber-950/20' },
+    { label: 'Customer Health Score', value: '98.9%', change: 'All systems operational', icon: Activity, color: 'text-accentemerald bg-emerald-50 dark:bg-emerald-950/20' },
   ];
 
   return (
@@ -73,72 +96,178 @@ export default function ManagerDashboard() {
       {/* DASHBOARD GRID CONTENT */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
-        {/* LIVE ACTIVITY FEED */}
+        {/* TABBED CONSOLE TABLES */}
         <div className="lg:col-span-2 bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden flex flex-col justify-between">
           <div>
-            <div className="px-6 py-5 border-b border-slate-200 flex justify-between items-center bg-slate-50/50">
+            {/* Tab header selector */}
+            <div className="px-6 py-5 border-b border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-50/50">
               <div>
-                <h3 className="text-sm font-bold text-slate-800">Autonomous Agent Activity Logs</h3>
-                <p className="text-[11px] text-slate-400 mt-0.5">Real-time processing feed across integration pipelines</p>
+                <h3 className="text-sm font-bold text-slate-800">Support Operations Center</h3>
+                <p className="text-[11px] text-slate-400 mt-0.5">Explore tickets, customer listings, decisions, and system logs</p>
               </div>
-              <div 
-                onClick={() => navigate('/reasoning')}
-                className="flex items-center gap-1.5 text-xs text-primary font-semibold hover:underline cursor-pointer"
-              >
-                <span>View reasoning runs</span>
-                <ArrowUpRight className="w-4 h-4" />
+              <div className="flex gap-1 bg-slate-200/60 p-1 rounded-lg">
+                {['Tickets', 'Customers', 'Decisions', 'Activities'].map(tab => (
+                  <button
+                    key={tab}
+                    onClick={() => setActiveTab(tab)}
+                    className={`px-3 py-1.5 rounded-md text-[10px] font-bold transition-all cursor-pointer ${
+                      activeTab === tab 
+                        ? 'bg-white text-slate-800 shadow-sm' 
+                        : 'text-slate-550 hover:bg-white/40'
+                    }`}
+                  >
+                    {tab}
+                  </button>
+                ))}
               </div>
             </div>
-            
-            <div className="divide-y divide-slate-100">
-              {liveTickets.map((ticket, index) => (
-                <div 
-                  key={index} 
-                  onClick={() => navigate('/tickets')}
-                  className="px-6 py-4 flex items-center justify-between hover:bg-slate-50/60 cursor-pointer transition-colors duration-150"
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs font-bold text-slate-900 bg-slate-100 px-2 py-1 rounded">
-                      {ticket.id}
-                    </span>
-                    <div className="flex flex-col">
-                      <span className="text-xs font-bold text-slate-800">{ticket.customer}</span>
-                      <span className="text-[11px] text-slate-400 mt-0.5">{ticket.agent}</span>
-                    </div>
-                  </div>
 
-                  <div className="text-left max-w-xs truncate">
-                    <span className="text-xs text-slate-600 font-medium">{ticket.action}</span>
-                  </div>
+            {/* TAB TABLE 1: TICKETS */}
+            {activeTab === 'Tickets' && (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-slate-100 bg-slate-50 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                      <th className="px-6 py-3">ID</th>
+                      <th className="px-6 py-3">Customer</th>
+                      <th className="px-6 py-3">Agent Node</th>
+                      <th className="px-6 py-3">Resolution Action</th>
+                      <th className="px-6 py-3">Sentiment</th>
+                      <th className="px-6 py-3 text-right">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 text-xs">
+                    {liveTickets.map((t, idx) => (
+                      <tr 
+                        key={idx} 
+                        onClick={() => navigate('/tickets')}
+                        className="hover:bg-slate-50/50 cursor-pointer transition-colors"
+                      >
+                        <td className="px-6 py-3.5 font-bold text-slate-900">{t.id}</td>
+                        <td className="px-6 py-3.5 font-bold text-slate-800">{t.customer}</td>
+                        <td className="px-6 py-3.5 text-slate-500 font-semibold">{t.agent}</td>
+                        <td className="px-6 py-3.5 text-slate-500 truncate max-w-xs">{t.action}</td>
+                        <td className="px-6 py-3.5">
+                          <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border ${
+                            t.sentiment === 'Positive' ? 'bg-emerald-50 text-accentemerald border-emerald-100' :
+                            t.sentiment === 'Neutral' ? 'bg-slate-50 text-slate-500 border-slate-100' :
+                            'bg-red-50 text-accentred border-red-100'
+                          }`}>{t.sentiment}</span>
+                        </td>
+                        <td className="px-6 py-3.5 text-right font-bold text-slate-700">
+                          <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border ${
+                            t.status === 'Success' ? 'bg-emerald-50 text-accentemerald border-emerald-100' : 'bg-red-50 text-accentred border-red-100'
+                          }`}>{t.status}</span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
 
-                  <div className="flex items-center gap-4">
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
-                      ticket.sentiment === 'Positive' 
-                        ? 'bg-emerald-50 text-accentemerald border-emerald-100'
-                        : ticket.sentiment === 'Neutral'
-                        ? 'bg-slate-50 text-slate-600 border-slate-100'
-                        : 'bg-red-50 text-accentred border-red-100'
-                    }`}>
-                      {ticket.sentiment}
-                    </span>
+            {/* TAB TABLE 2: CUSTOMERS */}
+            {activeTab === 'Customers' && (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-slate-100 bg-slate-50 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                      <th className="px-6 py-3">Customer Name</th>
+                      <th className="px-6 py-3">Company</th>
+                      <th className="px-6 py-3">Segment Tier</th>
+                      <th className="px-6 py-3">Health status</th>
+                      <th className="px-6 py-3 text-right">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 text-xs">
+                    {recentCustomers.map((c, idx) => (
+                      <tr 
+                        key={idx} 
+                        onClick={() => navigate('/customer360')}
+                        className="hover:bg-slate-50/50 cursor-pointer transition-colors"
+                      >
+                        <td className="px-6 py-3.5 font-bold text-slate-900">{c.name}</td>
+                        <td className="px-6 py-3.5 font-semibold text-slate-650">{c.company}</td>
+                        <td className="px-6 py-3.5 text-slate-500">{c.tier}</td>
+                        <td className="px-6 py-3.5">
+                          <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border ${
+                            c.health === 'Healthy' ? 'bg-emerald-50 text-accentemerald border-emerald-100' : 'bg-red-50 text-accentred border-red-100'
+                          }`}>{c.health}</span>
+                        </td>
+                        <td className="px-6 py-3.5 text-right">
+                          <span className="text-[9px] bg-blue-50 border border-blue-100 text-primary font-bold px-2 py-0.5 rounded-full">{c.status}</span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
 
-                    <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border ${
-                      ticket.status === 'Success' 
-                        ? 'bg-emerald-50 text-accentemerald border-emerald-100' 
-                        : 'bg-red-50 text-accentred border-red-100 animate-pulse'
-                    }`}>
-                      {ticket.status}
-                    </span>
+            {/* TAB TABLE 3: DECISIONS */}
+            {activeTab === 'Decisions' && (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-slate-100 bg-slate-50 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                      <th className="px-6 py-3">Decision ID</th>
+                      <th className="px-6 py-3">Action Description</th>
+                      <th className="px-6 py-3">Decision Node</th>
+                      <th className="px-6 py-3">Confidence Rating</th>
+                      <th className="px-6 py-3 text-right">Gatekeeper status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 text-xs">
+                    {aiDecisions.map((d, idx) => (
+                      <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
+                        <td className="px-6 py-3.5 font-bold text-slate-900">{d.decisionId}</td>
+                        <td className="px-6 py-3.5 text-slate-600 font-medium truncate max-w-xs">{d.action}</td>
+                        <td className="px-6 py-3.5 text-slate-500 font-semibold">{d.agent}</td>
+                        <td className="px-6 py-3.5 text-primary font-bold">{d.confidence}</td>
+                        <td className="px-6 py-3.5 text-right">
+                          <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border ${
+                            d.status === 'Synced' ? 'bg-emerald-50 text-accentemerald border-emerald-100' : 'bg-red-50 text-accentred border-red-100'
+                          }`}>{d.status}</span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
 
-                    <span className="text-[10px] text-slate-400 font-medium w-14 text-right">{ticket.time}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
+            {/* TAB TABLE 4: ACTIVITIES */}
+            {activeTab === 'Activities' && (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-slate-100 bg-slate-50 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                      <th className="px-6 py-3">Activity Description</th>
+                      <th className="px-6 py-3">Integration Node</th>
+                      <th className="px-6 py-3">Time elapsed</th>
+                      <th className="px-6 py-3 text-right">Sync status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 text-xs">
+                    {recentActivities.map((a, idx) => (
+                      <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
+                        <td className="px-6 py-3.5 text-slate-700 font-semibold">{a.description}</td>
+                        <td className="px-6 py-3.5 text-slate-500">{a.component}</td>
+                        <td className="px-6 py-3.5 text-slate-400">{a.date}</td>
+                        <td className="px-6 py-3.5 text-right">
+                          <span className="text-[9px] bg-emerald-50 border border-emerald-100 text-accentemerald font-bold px-2 py-0.5 rounded-full">{a.result}</span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
           </div>
 
           <div className="p-4 border-t border-slate-100 bg-slate-50/30 text-center">
-            <span className="text-xs text-slate-400 font-medium">Monitoring active streams</span>
+            <span className="text-xs text-slate-450 font-medium">Monitoring active streams</span>
           </div>
         </div>
 

@@ -1,186 +1,239 @@
 import React from 'react';
 import { 
-  TrendingUp, 
-  Coins, 
-  Activity, 
-  ShieldCheck, 
-  HelpCircle, 
-  BarChart4, 
-  Flame, 
   Smile, 
-  Compass 
+  Ticket, 
+  Calendar, 
+  TrendingUp, 
+  FolderOpen,
+  ArrowUpRight,
+  TrendingDown,
+  Activity
 } from 'lucide-react';
 
 export default function AnalyticsDashboard() {
-  const stats = [
-    { label: 'Calculated Cost Savings', value: '$24,912.40', change: 'Based on $12.50 per manual ticket', icon: Coins, color: 'text-accentemerald bg-emerald-50' },
-    { label: 'Token Efficiency Index', value: '0.94 / 1.0', change: '8.4% less prompt overhead this week', icon: TrendingUp, color: 'text-primary bg-blue-50' },
-    { label: 'SLA Success Rate', value: '99.98%', change: '2 breaches prevented by AI bypass', icon: ShieldCheck, color: 'text-primary bg-indigo-50' },
-  ];
-
   return (
     <div className="max-w-7xl mx-auto space-y-6">
       
-      {/* HEADER */}
-      <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
-        <h3 className="text-sm font-bold text-slate-800">CX Automation & Cost Analytics</h3>
-        <p className="text-[11px] text-slate-400 mt-0.5">Track financial performance, token consumption, and automation margins</p>
+      {/* HEADER SECTION */}
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm">
+        <h3 className="text-sm font-bold text-slate-800 dark:text-white">CX Performance Analytics</h3>
+        <p className="text-[11px] text-slate-400 mt-0.5">Real-time automation benchmarks, volume insights, and customer health metrics</p>
       </div>
 
-      {/* KPI ROWS */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-        {stats.map((stat, i) => {
-          const Icon = stat.icon;
-          return (
-            <div key={i} className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
-              <div className="flex justify-between items-start">
-                <div>
-                  <span className="text-slate-400 text-[10px] font-bold uppercase tracking-wider">{stat.label}</span>
-                  <h3 className="text-2xl font-bold text-slate-800 mt-1">{stat.value}</h3>
-                </div>
-                <div className={`p-2.5 rounded-lg ${stat.color}`}>
-                  <Icon className="w-5 h-5" />
-                </div>
-              </div>
-              <p className="text-[11px] text-slate-500 font-medium mt-3.5">{stat.change}</p>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* DETAILED METRICS CHART BLOCKS */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* CHARTS CONTAINER GRID */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         
-        {/* AUTOMATION FUNNEL CHART */}
-        <div className="lg:col-span-2 bg-white border border-slate-200 rounded-xl p-6 shadow-sm space-y-5">
-          <div>
-            <h3 className="text-sm font-bold text-slate-800">Resolution Funnel Volume</h3>
-            <p className="text-[11px] text-slate-400 mt-0.5">Autonomous routing volumes for the current billing cycle</p>
+        {/* CHART 1: SENTIMENT DISTRIBUTION */}
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm space-y-4">
+          <div className="flex justify-between items-start">
+            <div>
+              <h3 className="text-xs font-bold text-slate-800 dark:text-white flex items-center gap-1.5">
+                <Smile className="w-4 h-4 text-primary" /> Sentiment Distribution
+              </h3>
+              <p className="text-[10px] text-slate-400 mt-0.5">Average customer tone parsed via NLP algorithms</p>
+            </div>
+            <span className="text-[10px] text-accentemerald bg-emerald-50 dark:bg-emerald-950/20 px-2 py-0.5 rounded-full font-bold">
+              96.8% CSAT
+            </span>
           </div>
 
-          <div className="space-y-4">
-            
-            {/* Opened tickets */}
+          <div className="space-y-3.5">
             <div className="space-y-1">
-              <div className="flex justify-between text-xs font-semibold">
-                <span className="text-slate-600">1. Total Inquiries Opened</span>
-                <span className="text-slate-800">14,290</span>
+              <div className="flex justify-between text-[11px] font-bold text-slate-600 dark:text-slate-400">
+                <span>Positive (Encouraging / Satisfied)</span>
+                <span className="text-accentemerald">75%</span>
               </div>
-              <div className="h-6 w-full bg-slate-100 rounded-lg overflow-hidden relative">
-                <div className="h-full bg-slate-300 rounded-lg" style={{ width: '100%' }}></div>
-                <span className="text-[10px] font-bold text-slate-700 absolute inset-y-1.5 left-3">100% Volume</span>
+              <div className="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                <div className="h-full bg-accentemerald rounded-full" style={{ width: '75%' }}></div>
               </div>
             </div>
 
-            {/* AI parsed */}
             <div className="space-y-1">
-              <div className="flex justify-between text-xs font-semibold">
-                <span className="text-slate-600">2. Parsed by AI Guardians</span>
-                <span className="text-slate-800">12,490</span>
+              <div className="flex justify-between text-[11px] font-bold text-slate-600 dark:text-slate-400">
+                <span>Neutral (General Queries / Billing Inquiry)</span>
+                <span className="text-slate-500">20%</span>
               </div>
-              <div className="h-6 w-full bg-slate-100 rounded-lg overflow-hidden relative">
-                <div className="h-full bg-blue-400 rounded-lg" style={{ width: '87.4%' }}></div>
-                <span className="text-[10px] font-bold text-white absolute inset-y-1.5 left-3">87.4% Coverage</span>
+              <div className="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                <div className="h-full bg-slate-400 rounded-full" style={{ width: '20%' }}></div>
               </div>
             </div>
 
-            {/* Resolved */}
             <div className="space-y-1">
-              <div className="flex justify-between text-xs font-semibold">
-                <span className="text-slate-600">3. Resolved Autonomously</span>
-                <span className="text-slate-800">10,566</span>
+              <div className="flex justify-between text-[11px] font-bold text-slate-600 dark:text-slate-400">
+                <span>Critical / High Churn Alert (Frustrated)</span>
+                <span className="text-accentred">5%</span>
               </div>
-              <div className="h-6 w-full bg-slate-100 rounded-lg overflow-hidden relative">
-                <div className="h-full bg-accentemerald rounded-lg" style={{ width: '73.9%' }}></div>
-                <span className="text-[10px] font-bold text-white absolute inset-y-1.5 left-3">73.9% Net Resolution Rate</span>
+              <div className="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                <div className="h-full bg-accentred rounded-full" style={{ width: '5%' }}></div>
               </div>
             </div>
-
-            {/* Human escalated */}
-            <div className="space-y-1">
-              <div className="flex justify-between text-xs font-semibold">
-                <span className="text-slate-600">4. Escalled to Support Agents</span>
-                <span className="text-slate-800">1,924</span>
-              </div>
-              <div className="h-6 w-full bg-slate-100 rounded-lg overflow-hidden relative">
-                <div className="h-full bg-red-400 rounded-lg" style={{ width: '13.5%' }}></div>
-                <span className="text-[10px] font-bold text-white absolute inset-y-1.5 left-3">13.5% Human Takeover</span>
-              </div>
-            </div>
-
           </div>
         </div>
 
-        {/* SENTIMENT & SEGMENT BREAKDOWN (RIGHT) */}
-        <div className="space-y-6">
-          
-          {/* Sentiment Gauge */}
-          <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm space-y-4">
+        {/* CHART 2: TICKET STATUS */}
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm space-y-4">
+          <div className="flex justify-between items-start">
             <div>
-              <h3 className="text-sm font-bold text-slate-800">Sentiment Distribution</h3>
-              <p className="text-[11px] text-slate-400 mt-0.5">Average customer sentiment classification metrics</p>
+              <h3 className="text-xs font-bold text-slate-800 dark:text-white flex items-center gap-1.5">
+                <Ticket className="w-4 h-4 text-purple-600" /> Ticket Status Distribution
+              </h3>
+              <p className="text-[10px] text-slate-400 mt-0.5">Live counts mapped by processing states</p>
             </div>
-            
-            <div className="space-y-3.5">
-              <div className="space-y-1">
-                <div className="flex justify-between text-[11px] font-semibold text-slate-600">
-                  <span>Positive Sentiment</span>
-                  <span className="text-accentemerald">75%</span>
-                </div>
-                <div className="w-full h-2 bg-slate-150 rounded-full overflow-hidden">
-                  <div className="h-full bg-accentemerald" style={{ width: '75%' }}></div>
-                </div>
-              </div>
+            <span className="text-[10px] text-slate-500 bg-slate-50 dark:bg-slate-800 px-2 py-0.5 rounded-full font-bold">
+              14,290 Total
+            </span>
+          </div>
 
-              <div className="space-y-1">
-                <div className="flex justify-between text-[11px] font-semibold text-slate-600">
-                  <span>Neutral / Inquisitive</span>
-                  <span className="text-slate-600">20%</span>
-                </div>
-                <div className="w-full h-2 bg-slate-150 rounded-full overflow-hidden">
-                  <div className="h-full bg-slate-400" style={{ width: '20%' }}></div>
-                </div>
-              </div>
+          <div className="grid grid-cols-4 gap-2.5 pt-2">
+            <div className="p-3 bg-slate-50 dark:bg-slate-800/40 rounded-xl text-center border border-slate-100 dark:border-slate-800">
+              <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider block">Resolved</span>
+              <span className="text-sm font-extrabold text-accentemerald block mt-1">12,366</span>
+              <span className="text-[8px] text-slate-400 block mt-1">Auto-closed</span>
+            </div>
+            <div className="p-3 bg-slate-50 dark:bg-slate-800/40 rounded-xl text-center border border-slate-100 dark:border-slate-800">
+              <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider block">Open</span>
+              <span className="text-sm font-extrabold text-primary block mt-1">1,358</span>
+              <span className="text-[8px] text-slate-400 block mt-1">Queue filter</span>
+            </div>
+            <div className="p-3 bg-slate-50 dark:bg-slate-800/40 rounded-xl text-center border border-slate-100 dark:border-slate-800">
+              <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider block">Escalated</span>
+              <span className="text-sm font-extrabold text-accentred block mt-1">512</span>
+              <span className="text-[8px] text-slate-400 block mt-1">Tier 2 queue</span>
+            </div>
+            <div className="p-3 bg-slate-50 dark:bg-slate-800/40 rounded-xl text-center border border-slate-100 dark:border-slate-800">
+              <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider block">Critical</span>
+              <span className="text-sm font-extrabold text-accentorange block mt-1">54</span>
+              <span className="text-[8px] text-slate-400 block mt-1">Takeover run</span>
+            </div>
+          </div>
+        </div>
 
-              <div className="space-y-1">
-                <div className="flex justify-between text-[11px] font-semibold text-slate-600">
-                  <span>Angry / Critical Flags</span>
-                  <span className="text-accentred">5%</span>
-                </div>
-                <div className="w-full h-2 bg-slate-150 rounded-full overflow-hidden">
-                  <div className="h-full bg-accentred" style={{ width: '5%' }}></div>
-                </div>
-              </div>
+        {/* CHART 3: WEEKLY PERFORMANCE (MON-FRI BAR CHART) */}
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm space-y-4">
+          <div>
+            <h3 className="text-xs font-bold text-slate-800 dark:text-white flex items-center gap-1.5">
+              <Calendar className="w-4 h-4 text-accentorange" /> Weekly Performance (Resolved Volume)
+            </h3>
+            <p className="text-[10px] text-slate-400 mt-0.5">Daily autonomous resolution counts</p>
+          </div>
+
+          <div className="h-40 flex items-end justify-between pt-6 px-4 border-b border-slate-100 dark:border-slate-800">
+            {/* Monday */}
+            <div className="flex flex-col items-center w-8 group">
+              <div className="w-full bg-slate-200 group-hover:bg-primary rounded-t-md transition-colors" style={{ height: '70px' }}></div>
+              <span className="text-[9px] text-slate-400 font-semibold mt-2">Mon</span>
+            </div>
+            {/* Tuesday */}
+            <div className="flex flex-col items-center w-8 group">
+              <div className="w-full bg-slate-200 group-hover:bg-primary rounded-t-md transition-colors" style={{ height: '110px' }}></div>
+              <span className="text-[9px] text-slate-400 font-semibold mt-2">Tue</span>
+            </div>
+            {/* Wednesday */}
+            <div className="flex flex-col items-center w-8 group">
+              <div className="w-full bg-primary rounded-t-md transition-colors" style={{ height: '135px' }}></div>
+              <span className="text-[9px] text-slate-400 font-semibold mt-2 font-bold text-primary">Wed</span>
+            </div>
+            {/* Thursday */}
+            <div className="flex flex-col items-center w-8 group">
+              <div className="w-full bg-slate-200 group-hover:bg-primary rounded-t-md transition-colors" style={{ height: '95px' }}></div>
+              <span className="text-[9px] text-slate-400 font-semibold mt-2">Thu</span>
+            </div>
+            {/* Friday */}
+            <div className="flex flex-col items-center w-8 group">
+              <div className="w-full bg-slate-200 group-hover:bg-primary rounded-t-md transition-colors" style={{ height: '120px' }}></div>
+              <span className="text-[9px] text-slate-400 font-semibold mt-2">Fri</span>
+            </div>
+          </div>
+        </div>
+
+        {/* CHART 4: CUSTOMER GROWTH (MONTHLY ADOPTION STACKS) */}
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm space-y-4">
+          <div className="flex justify-between items-start">
+            <div>
+              <h3 className="text-xs font-bold text-slate-800 dark:text-white flex items-center gap-1.5">
+                <TrendingUp className="w-4 h-4 text-sky-600" /> Customer Growth Metrics
+              </h3>
+              <p className="text-[10px] text-slate-400 mt-0.5">Monthly enterprise registration additions</p>
+            </div>
+            <div className="flex items-center gap-1 text-[10px] text-accentemerald font-bold">
+              +14.2% Growth
             </div>
           </div>
 
-          {/* Department automation rate */}
-          <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm space-y-4">
-            <div>
-              <h3 className="text-sm font-bold text-slate-800">On-Target Automation Rates</h3>
-              <p className="text-[11px] text-slate-400 mt-0.5">Departmental workflow conversion target thresholds</p>
+          <div className="h-40 flex items-end justify-between pt-6 px-4 border-b border-slate-100 dark:border-slate-800">
+            {/* May */}
+            <div className="flex flex-col items-center w-8 group">
+              <div className="w-full bg-slate-200 group-hover:bg-sky-500 rounded-t-md transition-colors" style={{ height: '50px' }}></div>
+              <span className="text-[9px] text-slate-400 font-semibold mt-2">May</span>
+            </div>
+            {/* June */}
+            <div className="flex flex-col items-center w-8 group">
+              <div className="w-full bg-slate-200 group-hover:bg-sky-500 rounded-t-md transition-colors" style={{ height: '80px' }}></div>
+              <span className="text-[9px] text-slate-400 font-semibold mt-2">Jun</span>
+            </div>
+            {/* July */}
+            <div className="flex flex-col items-center w-8 group">
+              <div className="w-full bg-slate-200 group-hover:bg-sky-500 rounded-t-md transition-colors" style={{ height: '110px' }}></div>
+              <span className="text-[9px] text-slate-400 font-semibold mt-2">Jul</span>
+            </div>
+            {/* August */}
+            <div className="flex flex-col items-center w-8 group">
+              <div className="w-full bg-sky-500 rounded-t-md transition-colors" style={{ height: '145px' }}></div>
+              <span className="text-[9px] text-slate-400 font-semibold mt-2 font-bold text-sky-505">Aug</span>
+            </div>
+          </div>
+        </div>
+
+        {/* CHART 5: COMPLAINT CATEGORIES (部門別オートメーション) */}
+        <div className="lg:col-span-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm space-y-4">
+          <div>
+            <h3 className="text-xs font-bold text-slate-800 dark:text-white flex items-center gap-1.5">
+              <FolderOpen className="w-4 h-4 text-purple-600" /> Complaint Categories & Automation Share
+            </h3>
+            <p className="text-[10px] text-slate-400 mt-0.5">Departmental ticket volume distribution rates</p>
+          </div>
+
+          <div className="space-y-3.5">
+            <div className="space-y-1">
+              <div className="flex justify-between text-[11px] font-bold text-slate-600 dark:text-slate-400">
+                <span>Billing & Subscription disputes</span>
+                <span className="text-slate-800 dark:text-white">42% (5,249 Tickets)</span>
+              </div>
+              <div className="w-full h-3 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                <div className="h-full bg-primary" style={{ width: '42%' }}></div>
+              </div>
             </div>
 
-            <div className="space-y-2.5 text-xs">
-              <div className="flex justify-between items-center border-b border-slate-50 pb-1.5">
-                <span className="text-slate-500 font-medium">Billing & Disputes</span>
-                <span className="font-bold text-slate-800">92.4%</span>
+            <div className="space-y-1">
+              <div className="flex justify-between text-[11px] font-bold text-slate-600 dark:text-slate-400">
+                <span>DNS Config & SSL Setup Errors</span>
+                <span className="text-slate-800 dark:text-white">28% (3,490 Tickets)</span>
               </div>
-              <div className="flex justify-between items-center border-b border-slate-50 pb-1.5">
-                <span className="text-slate-500 font-medium">Domain Configs</span>
-                <span className="font-bold text-slate-800">81.0%</span>
+              <div className="w-full h-3 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                <div className="h-full bg-purple-500" style={{ width: '28%' }}></div>
               </div>
-              <div className="flex justify-between items-center border-b border-slate-50 pb-1.5">
-                <span className="text-slate-500 font-medium">Onboarding Specialist</span>
-                <span className="font-bold text-slate-800">75.5%</span>
+            </div>
+
+            <div className="space-y-1">
+              <div className="flex justify-between text-[11px] font-bold text-slate-600 dark:text-slate-400">
+                <span>Security Access Lockout (Okta/MFA)</span>
+                <span className="text-slate-800 dark:text-white">18% (2,240 Tickets)</span>
               </div>
-              <div className="flex justify-between items-center">
-                <span className="text-slate-500 font-medium">MFA Security Resets</span>
-                <span className="font-bold text-slate-800">68.2%</span>
+              <div className="w-full h-3 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                <div className="h-full bg-accentorange" style={{ width: '18%' }}></div>
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <div className="flex justify-between text-[11px] font-bold text-slate-600 dark:text-slate-400">
+                <span>General Workspace Account Inquiries</span>
+                <span className="text-slate-800 dark:text-white">12% (1,311 Tickets)</span>
+              </div>
+              <div className="w-full h-3 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                <div className="h-full bg-slate-450" style={{ width: '12%' }}></div>
               </div>
             </div>
           </div>
-
         </div>
 
       </div>

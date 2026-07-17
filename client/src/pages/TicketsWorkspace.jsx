@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { 
   ShieldCheck, 
-  UserCheck2, 
   MessageSquare, 
   Brain, 
   Clock, 
