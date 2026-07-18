@@ -1,47 +1,74 @@
-# Enterprise CX Guardian AI - Microservice
+# Enterprise CX Guardian AI - Python Microservice
 
-> **"An AI-powered Autonomous Customer Experience Agent."**
+This service provides the AI-powered customer experience layer for the monorepo. It is built with FastAPI and exposes chat, conversation, authentication, and analytics endpoints.
 
-This service is a completely independent microservice running on Python FastAPI. It communicates with the Node.js backend exclusively through REST APIs.
+## Service Structure
 
----
+```text
+ai-service/
+├── app/
+│   ├── agents/               # Agent implementations
+│   ├── api/                  # Auth and API route modules
+│   ├── conversation/         # Conversation manager
+│   ├── core/                 # Settings, logging, shared helpers
+│   ├── database/             # MongoDB connection layer
+│   ├── middleware/           # Authentication middleware
+│   ├── models/               # Domain and schema models
+│   ├── prompts/              # Prompt building logic
+│   ├── repositories/         # MongoDB repository layer
+│   ├── routers/              # FastAPI routers
+│   ├── schemas/              # Request/response models
+│   ├── services/             # Business logic for chat, auth, and AI
+│   └── utils/                # Exceptions and helpers
+├── requirements.txt
+└── README.md
+```
 
-## 🛠️ Technology Stack
+## Key Capabilities
 
-- **Python 3.12+**
-- **FastAPI**: Modern, fast web framework for building APIs with Python.
-- **Uvicorn**: Lightning-fast ASGI server implementation.
-- **Pydantic**: Data validation and settings management using Python type hints.
-- **Python-dotenv**: Environment configuration parser.
-- **HTTPX**: Next-generation HTTP client for async requests.
-- **Groq SDK**: High-performance LLM inference platform integration.
-- **Logging**: Structured logger for tracking operational metrics.
+- JWT-based authentication and authorization
+- Protected chat and conversation endpoints
+- User-specific conversation ownership enforcement
+- MongoDB-backed memory, message, prompt, and usage persistence
+- REST endpoints for chat, sentiment, reasoning, recommendations, and analysis
 
----
+## Quick Start
 
-## 🚀 Running the Microservice
+1. Create and activate a virtual environment:
 
-1. **Create Virtual Environment**:
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   ```
+```bash
+python -m venv venv
+venv\Scripts\activate  # Windows
+```
 
-2. **Install Dependencies**:
-   ```bash
-   pip install -r requirements.txt
-   ```
+2. Install dependencies:
 
-3. **Configure Environment Variables**:
-   Copy `.env.example` to `.env`:
-   ```bash
-   cp .env.example .env
-   ```
+```bash
+pip install -r requirements.txt
+```
 
-4. **Launch Server**:
-   ```bash
-   uvicorn app.main:app --reload --port 8000
-   ```
+3. Start the service:
 
-5. **Verify API Health**:
-   Navigate to `http://localhost:8000/` or inspect the interactive Swagger documentation at `http://localhost:8000/docs`.
+```bash
+uvicorn app.main:app --reload --port 8000
+```
+
+4. Open the API docs:
+
+- Swagger UI: http://localhost:8000/docs
+- ReDoc: http://localhost:8000/redoc
+
+## Environment Variables
+
+Set the following values in your environment before running the service:
+
+- MONGODB_URI
+- DATABASE_NAME
+- JWT_SECRET_KEY
+- JWT_ALGORITHM
+- GROQ_API_KEY
+- MODEL_NAME
+
+## Notes
+
+The chat flow is implemented as an extension of the existing AI service and now includes authenticated user context and conversation ownership checks.

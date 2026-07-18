@@ -1,61 +1,109 @@
-#  AI MicroService
+# AI MicroService
 
-Enterprise CX Guardian AI is a state-of-the-art real-time safety navigation and emergency response platform.
+Enterprise CX Guardian AI is a modular full-stack platform that combines a React frontend, an Express backend, and a Python FastAPI AI microservice for customer experience automation.
 
 ## Repository Structure
+
 ```text
- AI MicroService/
-│
-├── client/              # React frontend (Vite-powered)
-├── server/              # Express backend (Modular MVC, Socket.IO & MongoDB)
-├── ai-service/          # Python AI / ML service for safety insights
-├── docs/                # Architecture diagrams, pitch deck, and design documents
-├── docker-compose.yml   # Multi-container orchestration (Later)
-├── README.md            # This file
-└── .gitignore           # Root gitignore rules
+AI MicroService/
+├── ai-service/                 # Python FastAPI AI microservice
+│   ├── app/
+│   │   ├── agents/             # AI agent implementations
+│   │   ├── api/                # API route modules
+│   │   ├── conversation/       # Conversation lifecycle manager
+│   │   ├── core/               # Config, logger, shared core utilities
+│   │   ├── database/           # MongoDB connection layer
+│   │   ├── middleware/         # Auth and request middleware
+│   │   ├── models/             # Pydantic / domain models
+│   │   ├── prompts/            # Prompt builders
+│   │   ├── repositories/       # Persistence layer
+│   │   ├── routers/            # FastAPI routers
+│   │   ├── schemas/            # Request/response schemas
+│   │   ├── services/           # Core business logic
+│   │   └── utils/              # Helpers and exceptions
+│   ├── requirements.txt
+│   └── README.md
+├── client/                     # React + Vite frontend
+│   ├── src/
+│   ├── public/
+│   └── package.json
+├── server/                     # Node.js + Express backend
+│   ├── controllers/
+│   ├── routes/
+│   ├── services/
+│   ├── models/
+│   └── package.json
+├── docs/                       # Architecture notes, pitch deck, and sample requests
+├── package.json                # Root workspace scripts
+├── README.md                   # This file
+└── .gitignore
 ```
 
-## Features
+## What’s Included
 
-### 🛡️ Real-time Location Tracking & Safety Navigation
-- Browser geolocation with high accuracy fallback.
-- Integration with Leaflet and OpenStreetMap.
-- Real-time danger-zone analysis and warning alerts.
-- Live navigation options sorted by Safety Score, ETA, and distance.
+- React frontend with Vite and Tailwind styling
+- Express backend for REST APIs and shared application logic
+- Python FastAPI AI service for chat, reasoning, recommendation, and analytics flows
+- JWT-based authentication and authorization
+- Protected chat and conversation endpoints tied to authenticated users
+- MongoDB-backed conversation and message persistence
 
-### 🚨 Emergency SOS & Guardian System
-- One-tap SOS triggering.
-- Auto-notifies trusted guardians via Twilio SMS.
-- Integrated WebSocket rooms using Socket.IO for active guardian live tracking.
-- DB logging of resolved and active emergencies.
-
-### 👤 Secure Enterprise-grade Authentication
-- JSON Web Token (JWT) stateless auth.
-- Password hashing using bcrypt.
-- Session persistence and secure client state context.
-
-## Get Started
+## Getting Started
 
 ### Prerequisites
-- Node.js >= 20
-- MongoDB connection URI (Atlas or Local)
-- Twilio account credentials (optional, for SMS notifications)
 
-### Installation
-1. Install dependencies for all workspaces from the root:
-   ```bash
-   npm install
-   ```
-2. Configure local environment variables:
-   - Create `server/.env` (see `server/.env.example` for required variables).
-   - Create `client/.env` (see `client/.env.example` for required variables).
+- Node.js 20+
+- Python 3.10+
+- MongoDB instance (local or Atlas)
 
-### Running in Development
-Start both the React client and Express server concurrently:
+### 1) Install dependencies
+
+From the repository root:
+
+```bash
+npm install
+```
+
+For the Python microservice:
+
+```bash
+cd ai-service
+pip install -r requirements.txt
+```
+
+### 2) Run the services
+
+Start the frontend and backend together:
+
 ```bash
 npm run dev
 ```
 
-Or run them individually:
-- Client only: `npm run dev:client`
-- Server only: `npm run dev:server`
+This runs:
+- client: `npm run dev --workspace client`
+- server: `npm run dev --workspace server`
+
+Run the AI service separately:
+
+```bash
+cd ai-service
+uvicorn app.main:app --reload --port 8000
+```
+
+### 3) Access the APIs
+
+- Frontend: http://localhost:5173
+- Node backend: http://localhost:5000
+- AI service docs: http://localhost:8000/docs
+
+## Environment Notes
+
+Set up environment variables for the backend and AI service as needed, including:
+
+- MongoDB connection URI
+- JWT secret settings
+- Groq API key and model configuration
+
+## Notes
+
+The AI microservice is intentionally modular and extends the existing chat flow without replacing the core service. Authentication is integrated into the FastAPI routes and conversation ownership is enforced at the repository and router layers.
