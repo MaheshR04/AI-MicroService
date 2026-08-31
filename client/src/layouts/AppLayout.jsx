@@ -15,11 +15,14 @@ import {
   MessageSquare,
   Sun,
   Moon,
+  Headphones,
   LogOut,
   User
 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 export default function AppLayout() {
+  const { user, logout } = useAuth();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -31,6 +34,11 @@ export default function AppLayout() {
   
   const location = useLocation();
   const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
 
   // Initialize dark mode class on render
   useEffect(() => {
@@ -51,6 +59,8 @@ export default function AppLayout() {
     switch (location.pathname) {
       case '/dashboard':
         return 'Executive Overview';
+      case '/agent-dashboard':
+        return 'Support Agent Triage & Resolver Desk';
       case '/chat':
         return 'AI Assistant Conversation';
       case '/customer360':
@@ -68,6 +78,7 @@ export default function AppLayout() {
 
   const navItems = [
     { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { to: '/agent-dashboard', label: 'Support Desk', icon: Headphones },
     { to: '/chat', label: 'AI Assistant', icon: MessageSquare },
     { to: '/customer360', label: 'Customer 360', icon: UserCheck },
     { to: '/tickets', label: 'Tickets', icon: Ticket },
@@ -130,18 +141,29 @@ export default function AppLayout() {
 
         {/* Sidebar Footer area */}
         <div className="p-3 border-t border-slate-800">
-          <div className={`flex items-center gap-3 p-2 rounded-lg bg-slate-900/50 ${isCollapsed ? 'justify-center' : ''}`}>
-            <div className="relative">
-              <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-xs font-bold text-white uppercase">
-                AD
+          <div className={`flex items-center justify-between p-2 rounded-lg bg-slate-900/50 ${isCollapsed ? 'justify-center' : ''}`}>
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="relative shrink-0">
+                <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-xs font-bold text-white uppercase shadow-sm">
+                  {user?.avatar || 'US'}
+                </div>
+                <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-accentemerald border border-slate-900 rounded-full"></span>
               </div>
-              <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-accentemerald border border-slate-900 rounded-full"></span>
+              {!isCollapsed && (
+                <div className="flex flex-col min-w-0">
+                  <span className="text-xs font-semibold text-white truncate">{user?.name || 'Authorized Staff'}</span>
+                  <span className="text-[9px] text-slate-400 truncate">{user?.email || 'user@company.com'}</span>
+                </div>
+              )}
             </div>
             {!isCollapsed && (
-              <div className="flex flex-col min-w-0">
-                <span className="text-xs font-semibold text-white truncate">Admin Console</span>
-                <span className="text-[10px] text-slate-400 truncate">guardian@company.com</span>
-              </div>
+              <button 
+                onClick={handleLogout}
+                title="Sign Out"
+                className="text-slate-400 hover:text-red-400 p-1 rounded transition-colors cursor-pointer"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
             )}
           </div>
         </div>
@@ -254,18 +276,21 @@ export default function AppLayout() {
                 onClick={() => setShowProfileMenu(!showProfileMenu)}
                 className="flex items-center gap-2 cursor-pointer focus:outline-none"
               >
-                <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-xs font-bold text-white uppercase">
-                  AD
+                <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-xs font-bold text-white uppercase shadow-sm">
+                  {user?.avatar || 'US'}
                 </div>
               </button>
 
               {showProfileMenu && (
-                <div className={`absolute right-0 mt-2 w-48 border rounded-xl shadow-xl py-1 z-50 ${
-                  isDarkMode ? 'bg-slate-900 border-slate-800 text-slate-350 shadow-black/40' : 'bg-white border-slate-200 text-slate-800'
+                <div className={`absolute right-0 mt-2 w-52 border rounded-xl shadow-xl py-1 z-50 ${
+                  isDarkMode ? 'bg-slate-900 border-slate-800 text-slate-300 shadow-black/40' : 'bg-white border-slate-200 text-slate-800'
                 }`}>
-                  <div className="px-4 py-2 border-b border-slate-100 dark:border-slate-800">
-                    <span className="text-xs font-bold block">Administrator</span>
-                    <span className="text-[9px] text-slate-400 block">guardian@company.com</span>
+                  <div className="px-4 py-2.5 border-b border-slate-100 dark:border-slate-800">
+                    <span className="text-xs font-bold text-slate-900 dark:text-slate-100 block">{user?.name || 'Authorized Staff'}</span>
+                    <span className="text-[10px] text-slate-400 block truncate">{user?.email || 'user@company.com'}</span>
+                    <span className="inline-block mt-1 text-[9px] bg-blue-50 dark:bg-blue-950/40 text-primary border border-blue-100 dark:border-blue-800 font-bold px-1.5 py-0.2 rounded uppercase">
+                      {user?.role === 'manager' ? 'Manager Role' : 'Support Agent'}
+                    </span>
                   </div>
                   
                   <NavLink 
@@ -273,16 +298,18 @@ export default function AppLayout() {
                     onClick={() => setShowProfileMenu(false)}
                     className="flex items-center gap-2 px-4 py-2 text-xs hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
                   >
-                    <User className="w-4 h-4 text-slate-400" /> My Profile
+                    <User className="w-4 h-4 text-slate-400" /> Account Settings
                   </NavLink>
                   
-                  <NavLink 
-                    to="/login" 
-                    onClick={() => setShowProfileMenu(false)}
-                    className="flex items-center gap-2 px-4 py-2 text-xs hover:bg-slate-50 dark:hover:bg-slate-800 text-accentred transition-colors border-t border-slate-105 dark:border-slate-800"
+                  <button 
+                    onClick={() => {
+                      setShowProfileMenu(false);
+                      handleLogout();
+                    }}
+                    className="w-full text-left flex items-center gap-2 px-4 py-2 text-xs hover:bg-slate-50 dark:hover:bg-slate-800 text-accentred transition-colors border-t border-slate-100 dark:border-slate-800 cursor-pointer"
                   >
                     <LogOut className="w-4 h-4" /> Sign Out
-                  </NavLink>
+                  </button>
                 </div>
               )}
             </div>
