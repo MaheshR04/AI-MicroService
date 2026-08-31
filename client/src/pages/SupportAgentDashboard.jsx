@@ -1,157 +1,29 @@
 import React, { useState } from 'react';
 import { 
   Search, 
-  Filter, 
   Send, 
   CheckCircle2, 
-  AlertTriangle, 
   Clock, 
-  ShieldAlert, 
-  User, 
-  Building, 
   Tag, 
-  MessageSquare, 
   Sparkles, 
-  ArrowUpRight, 
   Headphones, 
-  ChevronRight, 
   Check, 
-  RotateCcw, 
   Smile, 
   Frown, 
   Meh, 
   FileText, 
-  Paperclip, 
   Flame, 
-  LifeBuoy,
-  PlusCircle,
-  ExternalLink
+  LifeBuoy
 } from 'lucide-react';
+import { useTickets } from '../context/TicketContext';
+import { useAuth } from '../context/AuthContext';
 
 export default function SupportAgentDashboard() {
-  // Master tickets state representing the triage flow (Normal vs High/Critical, Solved vs Pending)
-  const [tickets, setTickets] = useState([
-    {
-      id: 'CX-4910',
-      customer: 'Jessica Chen',
-      company: 'Zoom Inc.',
-      email: 'jessica.c@zoom.us',
-      tier: 'Enterprise Gold',
-      subject: 'Double billing invoice refund request for Annual Plan',
-      description: 'We were billed twice on invoice #INV-9102 for $1,499.00 on Aug 28th. Our finance team needs immediate credit note and refund.',
-      category: 'Billing',
-      priority: 'Critical', // High/Critical
-      status: 'Escalated', // In escalation
-      sentiment: 'Negative',
-      assignedTo: 'Alex Morgan (You)',
-      time: '5m ago',
-      slaRemaining: '25m',
-      slaStatus: 'warning',
-      channel: 'Chat',
-      messages: [
-        { sender: 'customer', name: 'Jessica Chen', text: 'Hello, invoice #INV-9102 was charged twice to our corporate card. Can you process the duplicate refund immediately?', time: '12m ago' },
-        { sender: 'system', name: 'AI Support', text: 'AI Support evaluated transaction. Amount exceeds standard autonomous refund threshold ($500 limit). Ticket escalated to Human Support Agent tier.', time: '10m ago' },
-        { sender: 'customer', name: 'Jessica Chen', text: 'Please expedite, our CFO is waiting on the credit receipt.', time: '5m ago' }
-      ],
-      internalNotes: ['Refund batch verified in Stripe dashboard. Needs supervisor sign-off if > $1000.']
-    },
-    {
-      id: 'CX-4911',
-      customer: 'David Miller',
-      company: 'Stripe API Partner',
-      email: 'dmiller@stripe-partner.io',
-      tier: 'Platinum SLA',
-      subject: 'Webhook endpoint returning 500 internal server error',
-      description: 'Our webhook listener is rejecting incoming events with signature verification mismatch after the latest SDK upgrade.',
-      category: 'Technical',
-      priority: 'Normal',
-      status: 'In Progress',
-      sentiment: 'Neutral',
-      assignedTo: 'Alex Morgan (You)',
-      time: '18m ago',
-      slaRemaining: '1h 42m',
-      slaStatus: 'good',
-      channel: 'Voice',
-      messages: [
-        { sender: 'customer', name: 'David Miller', text: 'We upgraded to webhook SDK v2.4 and event signatures are failing verification. Is there a new public signing key?', time: '20m ago' },
-        { sender: 'agent', name: 'Alex Morgan', text: 'Hi David, checking our webhook key rotation registry right now. One moment.', time: '14m ago' }
-      ],
-      internalNotes: ['Public key rotation occurred yesterday at 00:00 UTC. Need to supply updated certificate endpoint.']
-    },
-    {
-      id: 'CX-4913',
-      customer: 'Marcus Vance',
-      company: 'Datadog Inc.',
-      email: 'm.vance@datadoghq.com',
-      tier: 'Enterprise Gold',
-      subject: 'SSO SAML authentication login loop on Okta',
-      description: 'Users are stuck in redirect loop between Okta IdP and Guardian portal after ACS URL switch.',
-      category: 'Security',
-      priority: 'Critical',
-      status: 'Pending',
-      sentiment: 'Negative',
-      assignedTo: 'Alex Morgan (You)',
-      time: '32m ago',
-      slaRemaining: '40m',
-      slaStatus: 'warning',
-      channel: 'Chat',
-      messages: [
-        { sender: 'customer', name: 'Marcus Vance', text: 'Our team is locked out due to SAML redirect error. Can you verify the EntityID?', time: '35m ago' },
-        { sender: 'agent', name: 'Alex Morgan', text: 'I am inspecting your SAML metadata assertion bindings now.', time: '30m ago' }
-      ],
-      internalNotes: []
-    },
-    {
-      id: 'CX-4912',
-      customer: 'Sarah Jenkins',
-      company: 'Microsoft Corp',
-      email: 'sarah.j@microsoft.com',
-      tier: 'Gold Tier',
-      subject: 'Seat refund request for 5 accidental seat additions',
-      description: 'Accidental seat additions deallocated and refunded.',
-      category: 'Billing',
-      priority: 'Normal',
-      status: 'Solved',
-      sentiment: 'Positive',
-      assignedTo: 'Alex Morgan (You)',
-      time: '1h ago',
-      slaRemaining: 'Met',
-      slaStatus: 'good',
-      channel: 'Chat',
-      messages: [
-        { sender: 'customer', name: 'Sarah Jenkins', text: 'Hi, I accidentally added 5 new seat slots on our subscription yesterday. Can you please revert this?', time: '1h ago' },
-        { sender: 'agent', name: 'Alex Morgan', text: 'Refund of $199.00 USD processed and seat count restored to 40.', time: '58m ago' },
-        { sender: 'customer', name: 'Sarah Jenkins', text: 'Thank you for the quick seat refund!', time: '55m ago' }
-      ],
-      internalNotes: ['Auto-synced with Stripe billing portal.']
-    },
-    {
-      id: 'CX-4909',
-      customer: 'Andrew Larson',
-      company: 'Vercel Deployment',
-      email: 'alarson@vercel-labs.com',
-      tier: 'Standard Tier',
-      subject: 'Custom domain SSL binding failure on edge node',
-      description: 'Domain cert propagation delayed due to CAA DNS record restrictions.',
-      category: 'Technical',
-      priority: 'Normal',
-      status: 'Solved',
-      sentiment: 'Positive',
-      assignedTo: 'Alex Morgan (You)',
-      time: '2h ago',
-      slaRemaining: 'Met',
-      slaStatus: 'good',
-      channel: 'Chat',
-      messages: [
-        { sender: 'customer', name: 'Andrew Larson', text: 'SSL certificate verification is failing for custom subdomain.', time: '2h ago' },
-        { sender: 'agent', name: 'Alex Morgan', text: 'CAA records corrected and Let\'s Encrypt certificate re-issued.', time: '1h 50m ago' }
-      ],
-      internalNotes: []
-    }
-  ]);
+  const { tickets, escalateTicket, solveTicket, addReply, addInternalNote } = useTickets();
+  const { user } = useAuth();
 
   const [selectedTicketId, setSelectedTicketId] = useState('CX-4910');
-  const [activeFilter, setActiveFilter] = useState('All'); // All, Normal, High/Critical, Solved, Pending
+  const [activeFilter, setActiveFilter] = useState('All'); // All, Normal, High/Critical, Pending, Solved
   const [searchQuery, setSearchQuery] = useState('');
   const [replyText, setReplyText] = useState('');
   const [noteText, setNoteText] = useState('');
@@ -167,7 +39,7 @@ export default function SupportAgentDashboard() {
   ];
 
   // Active selected ticket object
-  const activeTicket = tickets.find(t => t.id === selectedTicketId) || tickets[0];
+  const activeTicket = tickets.find(t => t.id === selectedTicketId) || tickets[0] || {};
 
   // Filter logic
   const filteredTickets = tickets.filter(t => {
@@ -188,7 +60,6 @@ export default function SupportAgentDashboard() {
   });
 
   // Calculate agent stats
-  const totalOpen = tickets.filter(t => t.status !== 'Solved').length;
   const normalQueueCount = tickets.filter(t => t.priority === 'Normal' && t.status !== 'Solved').length;
   const criticalQueueCount = tickets.filter(t => (t.priority === 'Critical' || t.priority === 'High') && t.status !== 'Solved').length;
   const solvedTodayCount = tickets.filter(t => t.status === 'Solved').length;
@@ -201,77 +72,36 @@ export default function SupportAgentDashboard() {
   // Send Reply action
   const handleSendReply = (e) => {
     e?.preventDefault();
-    if (!replyText.trim() || !activeTicket) return;
+    if (!replyText.trim() || !activeTicket.id) return;
 
-    const newMessage = {
-      sender: 'agent',
-      name: 'Alex Morgan (Support Agent)',
-      text: replyText,
-      time: 'Just now'
-    };
-
-    setTickets(prev => prev.map(t => {
-      if (t.id === activeTicket.id) {
-        return {
-          ...t,
-          status: 'Pending', // Awaiting customer response
-          messages: [...t.messages, newMessage]
-        };
-      }
-      return t;
-    }));
-
+    const agentName = user?.name || 'Alex Morgan (Support Agent)';
+    addReply(activeTicket.id, replyText, agentName);
     setReplyText('');
-    showNotification(`Reply sent to ${activeTicket.customer}. Ticket marked as Pending.`);
+    showNotification(`Reply sent to ${activeTicket.customer}. Synced with Manager dashboard!`);
   };
 
-  // Solve & Close Ticket action (Moves to Solved)
+  // Solve & Close Ticket action (Moves to Solved in real-time)
   const handleSolveTicket = () => {
-    if (!activeTicket) return;
-    setTickets(prev => prev.map(t => {
-      if (t.id === activeTicket.id) {
-        return {
-          ...t,
-          status: 'Solved',
-          slaRemaining: 'Met'
-        };
-      }
-      return t;
-    }));
+    if (!activeTicket.id) return;
+    const agentName = user?.name || 'Alex Morgan (Support Agent)';
+    solveTicket(activeTicket.id, agentName);
     showNotification(`Ticket ${activeTicket.id} marked as Solved and synced with Manager Dashboard!`);
   };
 
-  // Escalate Ticket action (Moves to High/Critical Escalation)
+  // Escalate Ticket action (Moves to High/Critical Escalation and notifies Manager)
   const handleEscalateTicket = () => {
-    if (!activeTicket) return;
-    setTickets(prev => prev.map(t => {
-      if (t.id === activeTicket.id) {
-        return {
-          ...t,
-          priority: 'Critical',
-          status: 'Escalated'
-        };
-      }
-      return t;
-    }));
-    showNotification(`Ticket ${activeTicket.id} escalated to Manager & Tier-3 on-call queue.`);
+    if (!activeTicket.id) return;
+    const agentName = user?.name || 'Alex Morgan (Support Agent)';
+    escalateTicket(activeTicket.id, agentName);
+    showNotification(`Ticket ${activeTicket.id} escalated to Manager Console in real-time!`);
   };
 
   // Add Internal Staff Note
   const handleAddNote = (e) => {
     e.preventDefault();
-    if (!noteText.trim() || !activeTicket) return;
+    if (!noteText.trim() || !activeTicket.id) return;
 
-    setTickets(prev => prev.map(t => {
-      if (t.id === activeTicket.id) {
-        return {
-          ...t,
-          internalNotes: [...t.internalNotes, noteText]
-        };
-      }
-      return t;
-    }));
-
+    addInternalNote(activeTicket.id, noteText);
     setNoteText('');
     setShowNoteInput(false);
     showNotification(`Internal staff note added to ${activeTicket.id}`);
@@ -304,7 +134,7 @@ export default function SupportAgentDashboard() {
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">Alex Morgan</h3>
+              <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">{user?.name || 'Alex Morgan'}</h3>
               <span className="text-[9px] bg-blue-50 dark:bg-blue-950/40 text-primary border border-blue-100 dark:border-blue-800 font-bold px-1.5 py-0.5 rounded">
                 Tier-2 Agent
               </span>
@@ -493,7 +323,7 @@ export default function SupportAgentDashboard() {
                     activeTicket.status === 'Escalated' ? 'bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300' :
                     'bg-blue-100 text-primary dark:bg-blue-950 dark:text-blue-300'
                   }`}>
-                    {activeTicket.status.toUpperCase()}
+                    {activeTicket.status?.toUpperCase()}
                   </span>
                   <span className="text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-2 py-0.5 rounded font-medium">
                     Channel: {activeTicket.channel}
@@ -574,7 +404,7 @@ export default function SupportAgentDashboard() {
               />
               <button
                 type="submit"
-                className="bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-sm"
+                className="bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-sm cursor-pointer"
               >
                 Save Note
               </button>
@@ -600,7 +430,7 @@ export default function SupportAgentDashboard() {
             )}
 
             {/* Chat message bubbles */}
-            {activeTicket.messages.map((msg, index) => {
+            {activeTicket.messages && activeTicket.messages.map((msg, index) => {
               const isAgent = msg.sender === 'agent';
               const isSystem = msg.sender === 'system';
 

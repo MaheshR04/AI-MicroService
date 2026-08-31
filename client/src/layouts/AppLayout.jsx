@@ -6,23 +6,26 @@ import {
   Search, 
   Bell, 
   ChevronLeft, 
-  ChevronRight,
-  ShieldCheck,
-  UserCheck,
-  HelpCircle,
-  BarChart4,
-  Ticket,
-  MessageSquare,
-  Sun,
-  Moon,
-  Headphones,
-  LogOut,
-  User
+  ChevronRight, 
+  ShieldCheck, 
+  UserCheck, 
+  BarChart4, 
+  Ticket, 
+  MessageSquare, 
+  Sun, 
+  Moon, 
+  Headphones, 
+  LogOut, 
+  User, 
+  Cpu, 
+  Inbox,
+  RefreshCw,
+  Sparkles
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export default function AppLayout() {
-  const { user, logout } = useAuth();
+  const { user, logout, switchRole } = useAuth();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -38,6 +41,16 @@ export default function AppLayout() {
   const handleLogout = () => {
     logout();
     navigate('/login');
+  };
+
+  const handleToggleRole = () => {
+    const nextRole = user?.role === 'manager' ? 'agent' : 'manager';
+    switchRole(nextRole);
+    if (nextRole === 'manager') {
+      navigate('/dashboard');
+    } else {
+      navigate('/agent-dashboard');
+    }
   };
 
   // Initialize dark mode class on render
@@ -58,33 +71,51 @@ export default function AppLayout() {
   const getPageTitle = () => {
     switch (location.pathname) {
       case '/dashboard':
-        return 'Executive Overview';
+        return 'Executive Overview & Operations';
       case '/agent-dashboard':
         return 'Support Agent Triage & Resolver Desk';
+      case '/workspace':
+        return 'Interactive Ticket Workspace';
       case '/chat':
-        return 'AI Assistant Conversation';
+        return user?.role === 'manager' ? 'AI Assistant Lab' : 'AI Co-Pilot Assistant';
       case '/customer360':
         return 'Customer 360 Profile';
       case '/tickets':
-        return 'Ticket Management Panel';
+        return 'Ticket Dispatch Operations';
       case '/analytics':
-        return 'Performance Analytics';
+        return 'Performance & Token Analytics';
+      case '/agents':
+        return 'AI Autopilot Agent Monitor';
       case '/settings':
-        return 'Platform Settings';
+        return user?.role === 'manager' ? 'Enterprise Platform Settings' : 'Agent Profile & Preferences';
       default:
-        return 'Console Console';
+        return 'CX Guardian Console';
     }
   };
 
-  const navItems = [
-    { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { to: '/agent-dashboard', label: 'Support Desk', icon: Headphones },
-    { to: '/chat', label: 'AI Assistant', icon: MessageSquare },
+  // 1. MANAGER NAVIGATION: Full executive oversight, analytics, and service management
+  const managerNavItems = [
+    { to: '/dashboard', label: 'Executive Dashboard', icon: LayoutDashboard },
+    { to: '/analytics', label: 'Performance Analytics', icon: BarChart4 },
+    { to: '/tickets', label: 'Ticket Operations', icon: Ticket },
+    { to: '/agents', label: 'AI Agent Monitor', icon: Cpu },
     { to: '/customer360', label: 'Customer 360', icon: UserCheck },
-    { to: '/tickets', label: 'Tickets', icon: Ticket },
-    { to: '/analytics', label: 'Analytics', icon: BarChart4 },
-    { to: '/settings', label: 'Settings', icon: Settings2 },
+    { to: '/chat', label: 'AI Assistant Lab', icon: MessageSquare },
+    { to: '/settings', label: 'Platform Settings', icon: Settings2 },
   ];
+
+  // 2. SUPPORT AGENT NAVIGATION: Frontline human support working tools ONLY
+  const agentNavItems = [
+    { to: '/agent-dashboard', label: 'Support Triage Desk', icon: Headphones },
+    { to: '/workspace', label: 'Ticket Workspace', icon: Inbox },
+    { to: '/chat', label: 'AI Co-Pilot Assistant', icon: MessageSquare },
+    { to: '/customer360', label: 'Customer Lookup', icon: UserCheck },
+    { to: '/settings', label: 'My Settings', icon: Settings2 },
+  ];
+
+  // Select navigation set based on authenticated user's role
+  const isManager = user?.role === 'manager';
+  const navItems = isManager ? managerNavItems : agentNavItems;
 
   return (
     <div className={`flex h-screen overflow-hidden font-sans transition-colors duration-200 ${
@@ -93,30 +124,71 @@ export default function AppLayout() {
       
       {/* SIDEBAR NAVIGATION */}
       <aside 
-        className={`bg-[#1E293B] text-slate-300 flex flex-col justify-between transition-all duration-300 relative border-r border-slate-800 ${
+        className={`bg-[#1E293B] text-slate-300 flex flex-col justify-between transition-all duration-300 relative border-r border-slate-800 shrink-0 ${
           isCollapsed ? 'w-20' : 'w-64'
         }`}
       >
         <div>
           {/* Logo Brand area */}
-          <div className="flex items-center gap-3 px-4 py-5 border-b border-slate-800">
-            <div className="bg-primary flex items-center justify-center p-2 rounded-lg text-white shadow-lg shadow-blue-500/20 shrink-0">
-              <ShieldCheck className="w-6 h-6" />
-            </div>
+          <div className="p-5 flex items-center justify-between border-b border-slate-800">
             {!isCollapsed && (
-              <div className="flex flex-col">
-                <span className="font-extrabold text-white text-base tracking-tight leading-tight">
-                  CX GUARDIAN AI
-                </span>
-                <span className="text-[10px] text-slate-400 font-semibold tracking-wider uppercase">
-                  Enterprise Autopilot
-                </span>
+              <div className="flex items-center gap-3">
+                <div className="bg-primary flex items-center justify-center p-2 rounded-xl text-white shadow-lg shadow-blue-500/20">
+                  <ShieldCheck className="w-5 h-5" />
+                </div>
+                <div>
+                  <span className="font-extrabold text-white text-sm tracking-tight block">
+                    CX GUARDIAN AI
+                  </span>
+                  <span className="text-[10px] text-slate-400 font-semibold tracking-wider uppercase block">
+                    {isManager ? 'Manager Console' : 'Support Desk'}
+                  </span>
+                </div>
               </div>
             )}
+            {isCollapsed && (
+              <div className="mx-auto bg-primary p-2 rounded-xl text-white">
+                <ShieldCheck className="w-5 h-5" />
+              </div>
+            )}
+            
+            <button 
+              onClick={() => setIsCollapsed(!isCollapsed)}
+              className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors hidden md:block cursor-pointer"
+            >
+              {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+            </button>
           </div>
 
-          {/* Navigation links */}
-          <nav className="mt-6 px-3 space-y-1.5">
+          {/* Access Mode Badge & Quick Role Switcher */}
+          {!isCollapsed && (
+            <div className="px-5 py-3 border-b border-slate-800/80 bg-slate-900/40 flex items-center justify-between">
+              <div>
+                <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider block">Access Mode</span>
+                <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full inline-block mt-0.5 ${
+                  isManager 
+                    ? 'bg-purple-950/80 text-purple-300 border border-purple-800/60' 
+                    : 'bg-emerald-950/80 text-emerald-300 border border-emerald-800/60'
+                }`}>
+                  {isManager ? '👑 MANAGER' : '🎧 SUPPORT AGENT'}
+                </span>
+              </div>
+
+              {/* Instant Switch Mode Button */}
+              <button
+                type="button"
+                onClick={handleToggleRole}
+                title={`Switch to ${isManager ? 'Support Agent Desk' : 'Manager Console'}`}
+                className="text-[10px] text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 px-2 py-1 rounded-md transition-colors flex items-center gap-1 cursor-pointer font-medium"
+              >
+                <RefreshCw className="w-3 h-3 text-primary" />
+                <span>{isManager ? 'To Agent' : 'To Manager'}</span>
+              </button>
+            </div>
+          )}
+
+          {/* Nav Items List */}
+          <nav className="p-3 space-y-1.5 overflow-y-auto max-h-[calc(100vh-14rem)]">
             {navItems.map((item) => {
               const Icon = item.icon;
               return (
@@ -124,14 +196,15 @@ export default function AppLayout() {
                   key={item.to}
                   to={item.to}
                   className={({ isActive }) =>
-                    `flex items-center gap-3.5 px-3 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
+                    `flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all duration-150 cursor-pointer ${
                       isActive 
-                        ? 'bg-primary text-white shadow-md shadow-blue-500/10' 
-                        : 'hover:bg-slate-800 hover:text-white'
-                    }`
+                        ? 'bg-primary text-white shadow-md shadow-blue-500/20' 
+                        : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-200'
+                    } ${isCollapsed ? 'justify-center' : ''}`
                   }
+                  title={isCollapsed ? item.label : undefined}
                 >
-                  <Icon className="w-5 h-5 shrink-0" />
+                  <Icon className="w-4 h-4 shrink-0" />
                   {!isCollapsed && <span>{item.label}</span>}
                 </NavLink>
               );
@@ -139,190 +212,168 @@ export default function AppLayout() {
           </nav>
         </div>
 
-        {/* Sidebar Footer area */}
-        <div className="p-3 border-t border-slate-800">
-          <div className={`flex items-center justify-between p-2 rounded-lg bg-slate-900/50 ${isCollapsed ? 'justify-center' : ''}`}>
-            <div className="flex items-center gap-2.5 min-w-0">
-              <div className="relative shrink-0">
-                <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-xs font-bold text-white uppercase shadow-sm">
-                  {user?.avatar || 'US'}
+        {/* Sidebar Footer / User Profile & Logout */}
+        <div className="p-3 border-t border-slate-800 space-y-2">
+          
+          {/* Authenticated User pill */}
+          {!isCollapsed && user && (
+            <div className="px-3 py-2 bg-slate-800/40 rounded-xl border border-slate-800 flex items-center justify-between">
+              <div className="flex items-center gap-2 overflow-hidden">
+                <div className="w-7 h-7 bg-primary text-white rounded-full flex items-center justify-center font-bold text-xs shrink-0">
+                  {user.avatar || (user.name ? user.name.slice(0, 2).toUpperCase() : 'US')}
                 </div>
-                <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-accentemerald border border-slate-900 rounded-full"></span>
+                <div className="overflow-hidden">
+                  <span className="text-xs font-bold text-slate-200 block truncate">{user.name}</span>
+                  <span className="text-[10px] text-slate-500 block truncate">{user.email}</span>
+                </div>
               </div>
-              {!isCollapsed && (
-                <div className="flex flex-col min-w-0">
-                  <span className="text-xs font-semibold text-white truncate">{user?.name || 'Authorized Staff'}</span>
-                  <span className="text-[9px] text-slate-400 truncate">{user?.email || 'user@company.com'}</span>
-                </div>
-              )}
-            </div>
-            {!isCollapsed && (
-              <button 
+              <button
+                type="button"
                 onClick={handleLogout}
                 title="Sign Out"
-                className="text-slate-400 hover:text-red-400 p-1 rounded transition-colors cursor-pointer"
+                className="text-slate-400 hover:text-red-400 p-1.5 rounded-lg hover:bg-slate-800 transition-colors cursor-pointer"
               >
-                <LogOut className="w-4 h-4" />
+                <LogOut className="w-3.5 h-3.5" />
               </button>
-            )}
-          </div>
-        </div>
+            </div>
+          )}
 
-        {/* Sidebar collapse button */}
-        <button
-          onClick={() => setIsCollapsed(!isCollapsed)}
-          className="absolute -right-3.5 top-6 bg-[#1E293B] border border-slate-800 text-slate-400 hover:text-white p-1 rounded-full shadow-md z-50 cursor-pointer hidden md:block"
-        >
-          {isCollapsed ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronLeft className="w-3.5 h-3.5" />}
-        </button>
+          {isCollapsed && (
+            <button
+              onClick={handleLogout}
+              title="Sign Out"
+              className="w-full flex justify-center text-slate-400 hover:text-red-400 p-2.5 rounded-xl hover:bg-slate-800 transition-colors cursor-pointer"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
+          )}
+
+        </div>
       </aside>
 
       {/* MAIN CONTENT AREA */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         
-        {/* TOP NAVBAR */}
-        <header className={`h-16 border-b flex items-center justify-between px-6 shrink-0 z-40 transition-colors ${
-          isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
-        }`}>
-          <div className="flex items-center gap-4">
-            <h2 className={`text-lg font-bold tracking-tight ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-              {getPageTitle()}
-            </h2>
-            <div className="hidden lg:flex items-center gap-2 px-3 py-1 bg-emerald-50 text-accentemerald rounded-full border border-emerald-100 text-xs font-semibold">
-              <span className="w-1.5 h-1.5 bg-accentemerald rounded-full animate-ping"></span>
-              Autopilot Active
-            </div>
+        {/* TOP NAVIGATION BAR */}
+        <header className="h-16 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center justify-between px-6 z-20 shrink-0">
+          
+          {/* Breadcrumb / Title */}
+          <div className="flex items-center gap-3">
+            <h1 className="text-base font-bold text-slate-800 dark:text-slate-100">{getPageTitle()}</h1>
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-accentemerald border border-emerald-100 dark:border-emerald-800 flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-accentemerald animate-pulse"></span>
+              System Active
+            </span>
           </div>
 
-          <div className="flex items-center gap-4">
+          {/* Right Action Icons */}
+          <div className="flex items-center gap-3">
             
-            {/* SEARCH */}
-            <div className="relative hidden md:block w-64">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
-              <input
-                type="text"
-                placeholder="Search resources, logs..."
-                className={`w-full border pl-9 pr-4 py-1.5 rounded-lg text-xs outline-none transition-all duration-200 ${
-                  isDarkMode 
-                    ? 'bg-slate-800 border-slate-700 text-white focus:bg-slate-800/80 focus:border-primary' 
-                    : 'bg-slate-50 border-slate-200 text-slate-800 focus:bg-white focus:border-primary'
-                }`}
+            {/* Quick Search */}
+            <div className="relative hidden sm:block w-48 lg:w-64">
+              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
+              <input 
+                type="text" 
+                placeholder="Search resources, logs..." 
+                className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 pl-8 pr-3 py-1.5 rounded-lg text-xs outline-none focus:border-primary focus:bg-white dark:focus:bg-slate-900 transition-colors"
               />
             </div>
 
-            {/* THEME TOGGLE */}
+            {/* Dark Mode Toggle */}
             <button
               onClick={toggleTheme}
-              className={`p-2 rounded-full border cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors ${
-                isDarkMode ? 'border-slate-800 text-yellow-400' : 'border-slate-200 text-slate-500'
-              }`}
-              title="Toggle Theme"
+              className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+              title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
             >
               {isDarkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </button>
 
-            {/* NOTIFICATIONS */}
+            {/* Notifications */}
             <div className="relative">
               <button 
                 onClick={() => setShowNotifications(!showNotifications)}
-                className={`p-2 rounded-full border cursor-pointer transition-colors relative ${
-                  isDarkMode ? 'border-slate-800 text-slate-400 hover:bg-slate-800' : 'border-slate-200 text-slate-500 hover:bg-slate-100'
-                }`}
+                className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors relative cursor-pointer"
               >
                 <Bell className="w-4 h-4" />
-                {notifications.length > 0 && (
-                  <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-accentred rounded-full"></span>
-                )}
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-primary rounded-full"></span>
               </button>
 
               {showNotifications && (
-                <div className={`absolute right-0 mt-2 w-80 border rounded-xl shadow-xl py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200 ${
-                  isDarkMode ? 'bg-slate-900 border-slate-800 text-slate-300 shadow-black/40' : 'bg-white border-slate-200 text-slate-800'
-                }`}>
-                  <div className="px-4 py-1.5 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
-                    <span className="text-xs font-bold">System Alerts</span>
-                    <button 
-                      onClick={() => setNotifications([])}
-                      className="text-[10px] text-primary hover:underline"
-                    >
-                      Clear all
-                    </button>
+                <div className="absolute right-0 mt-2 w-72 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl p-3 z-50 text-xs space-y-2 animate-fade-in">
+                  <div className="flex justify-between items-center pb-2 border-b border-slate-100 dark:border-slate-800">
+                    <span className="font-bold text-slate-800 dark:text-slate-100">Live Telemetry Alerts</span>
+                    <span className="text-[10px] text-primary font-semibold">2 New</span>
                   </div>
-                  <div className="max-h-60 overflow-y-auto">
-                    {notifications.length === 0 ? (
-                      <div className="px-4 py-6 text-center text-xs text-slate-400">
-                        No active alerts
-                      </div>
-                    ) : (
-                      notifications.map(notif => (
-                        <div key={notif.id} className="px-4 py-3 hover:bg-slate-50/50 dark:hover:bg-slate-800/50 border-b border-slate-50 dark:border-slate-800 last:border-b-0 flex items-start gap-2.5">
-                          <span className={`w-1.5 h-1.5 rounded-full mt-1.5 ${
-                            notif.type === 'success' ? 'bg-accentemerald' : 'bg-accentorange'
-                          }`}></span>
-                          <span className="text-[11px] leading-normal">{notif.text}</span>
-                        </div>
-                      ))
-                    )}
-                  </div>
+                  {notifications.map(n => (
+                    <div key={n.id} className="p-2 rounded-lg bg-slate-50 dark:bg-slate-800 text-[11px] text-slate-600 dark:text-slate-300">
+                      {n.text}
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
 
-            <div className={`h-6 w-px ${isDarkMode ? 'bg-slate-850' : 'bg-slate-200'}`}></div>
-
-            {/* PROFILE MENU */}
+            {/* User Avatar & Menu */}
             <div className="relative">
-              <button 
+              <button
                 onClick={() => setShowProfileMenu(!showProfileMenu)}
-                className="flex items-center gap-2 cursor-pointer focus:outline-none"
+                className="w-8 h-8 rounded-full bg-primary text-white font-bold text-xs flex items-center justify-center shadow-sm cursor-pointer hover:ring-2 hover:ring-primary/40 transition-all"
               >
-                <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-xs font-bold text-white uppercase shadow-sm">
-                  {user?.avatar || 'US'}
-                </div>
+                {user?.avatar || (user?.name ? user.name.slice(0, 2).toUpperCase() : 'US')}
               </button>
 
               {showProfileMenu && (
-                <div className={`absolute right-0 mt-2 w-52 border rounded-xl shadow-xl py-1 z-50 ${
-                  isDarkMode ? 'bg-slate-900 border-slate-800 text-slate-300 shadow-black/40' : 'bg-white border-slate-200 text-slate-800'
-                }`}>
-                  <div className="px-4 py-2.5 border-b border-slate-100 dark:border-slate-800">
-                    <span className="text-xs font-bold text-slate-900 dark:text-slate-100 block">{user?.name || 'Authorized Staff'}</span>
-                    <span className="text-[10px] text-slate-400 block truncate">{user?.email || 'user@company.com'}</span>
-                    <span className="inline-block mt-1 text-[9px] bg-blue-50 dark:bg-blue-950/40 text-primary border border-blue-100 dark:border-blue-800 font-bold px-1.5 py-0.2 rounded uppercase">
-                      {user?.role === 'manager' ? 'Manager Role' : 'Support Agent'}
+                <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl p-2 z-50 text-xs animate-fade-in">
+                  <div className="p-2 border-b border-slate-100 dark:border-slate-800 mb-1">
+                    <span className="font-bold text-slate-800 dark:text-slate-100 block truncate">{user?.name}</span>
+                    <span className="text-[10px] text-slate-400 block truncate">{user?.email}</span>
+                    <span className="text-[9px] font-bold text-primary uppercase mt-1 block">
+                      Role: {user?.role === 'manager' ? '👑 Operations Manager' : '🎧 Support Agent'}
                     </span>
                   </div>
                   
-                  <NavLink 
-                    to="/settings" 
-                    onClick={() => setShowProfileMenu(false)}
-                    className="flex items-center gap-2 px-4 py-2 text-xs hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
-                  >
-                    <User className="w-4 h-4 text-slate-400" /> Account Settings
-                  </NavLink>
-                  
-                  <button 
+                  <button
                     onClick={() => {
                       setShowProfileMenu(false);
-                      handleLogout();
+                      handleToggleRole();
                     }}
-                    className="w-full text-left flex items-center gap-2 px-4 py-2 text-xs hover:bg-slate-50 dark:hover:bg-slate-800 text-accentred transition-colors border-t border-slate-100 dark:border-slate-800 cursor-pointer"
+                    className="w-full text-left p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 text-primary font-bold flex items-center gap-2 cursor-pointer"
                   >
-                    <LogOut className="w-4 h-4" /> Sign Out
+                    <RefreshCw className="w-3.5 h-3.5" />
+                    <span>Switch to {isManager ? 'Support Desk' : 'Manager Console'}</span>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setShowProfileMenu(false);
+                      navigate('/settings');
+                    }}
+                    className="w-full text-left p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center gap-2 cursor-pointer"
+                  >
+                    <Settings2 className="w-3.5 h-3.5" />
+                    <span>Settings & Profile</span>
+                  </button>
+
+                  <button
+                    onClick={handleLogout}
+                    className="w-full text-left p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/40 text-red-600 dark:text-red-400 font-medium flex items-center gap-2 cursor-pointer border-t border-slate-100 dark:border-slate-800 mt-1"
+                  >
+                    <LogOut className="w-3.5 h-3.5" />
+                    <span>Sign Out</span>
                   </button>
                 </div>
               )}
             </div>
 
           </div>
+
         </header>
 
-        {/* CONTAINER FOR OUTLET */}
-        <main className={`flex-1 overflow-y-auto p-6 ${
-          isDarkMode ? 'bg-slate-950' : 'bg-slate-50'
-        }`}>
+        {/* OUTLET / MAIN WORKSPACE VIEW */}
+        <main className="flex-1 overflow-y-auto p-6 bg-slate-50 dark:bg-slate-950 transition-colors">
           <Outlet />
         </main>
+
       </div>
 
     </div>
