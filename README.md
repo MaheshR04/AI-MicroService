@@ -126,7 +126,8 @@ Access endpoints:
 
 Detailed step-by-step deployment instructions for cloud platforms are documented in [`docs/deployment.md`](docs/deployment.md):
 
-- **Frontend SPA** → Deployed to **Vercel** ([`client/vercel.json`](client/vercel.json))
+- **Manager Console** → Deployed to **Vercel / Render** (`manager/Dockerfile`)
+- **Customer Support Desk** → Deployed to **Vercel / Render** (`support/Dockerfile`)
 - **Node Gateway** → Deployed to **Render** ([`server/render.yaml`](server/render.yaml))
 - **FastAPI AI Service** → Deployed to **Render** ([`ai-service/render.yaml`](ai-service/render.yaml))
 - **Database** → **MongoDB Atlas**
@@ -165,12 +166,17 @@ Detailed step-by-step deployment instructions for cloud platforms are documented
 
 ```
 AI-MicroService/
-├── client/                     # React 18 + Vite SPA Frontend
-│   ├── src/components/         # SkeletonLoader, Toast, ThemeToggle, EmptyState
-│   ├── src/context/            # ThemeContext, ToastContext
-│   ├── src/pages/              # ManagerDashboard, ChatPage, NotFoundPage
-│   └── vercel.json             # Vercel deployment config
-├── server/                     # Node.js 20 Express Gateway
+├── manager/                    # React 18 + Vite Manager & Supervisor Console (:5173)
+│   ├── src/components/         # Reusable UI components & ProtectedRoute
+│   ├── src/context/            # AuthContext, TicketContext, ThemeContext, ToastContext
+│   ├── src/layouts/            # AppLayout (Supervisor oversight navigation)
+│   └── src/pages/              # ManagerDashboard, Analytics, TicketOperations, etc.
+├── support/                    # React 18 + Vite Customer Support Desk (:5174)
+│   ├── src/components/         # Reusable UI components & ProtectedRoute
+│   ├── src/context/            # AuthContext, TicketContext, ThemeContext, ToastContext
+│   ├── src/layouts/            # AppLayout (Frontline support triage navigation)
+│   └── src/pages/              # SupportAgentDashboard, TicketsWorkspace, etc.
+├── server/                     # Node.js 20 Express Gateway (:5000)
 │   ├── config/                 # Winston centralized 7-category logger
 │   ├── middleware/             # Security (Helmet, CORS, Rate Limit) & Performance (Compression, Cache)
 │   ├── repositories/           # Clean Architecture Storage Adapters (inMemory / mongodb)

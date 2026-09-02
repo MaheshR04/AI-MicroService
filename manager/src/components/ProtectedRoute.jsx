@@ -24,14 +24,7 @@ export default function ProtectedRoute({ allowedRoles = [] }) {
 
   // If specific roles are required, check authorization
   if (allowedRoles.length > 0 && !allowedRoles.includes(user.role)) {
-    // Redirect Support Agent to Agent Desk if trying to access Manager-only route
-    if (user.role === 'agent') {
-      return <Navigate to="/agent-dashboard" replace />;
-    }
-    // Redirect Manager to Manager Dashboard if trying to access Agent-only route
-    if (user.role === 'manager') {
-      return <Navigate to="/dashboard" replace />;
-    }
+    return <Navigate to="/dashboard" replace />;
   }
 
   return <Outlet />;

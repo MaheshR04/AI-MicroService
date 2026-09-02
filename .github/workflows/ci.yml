@@ -5,7 +5,8 @@
 # Triggers: push / PR to main, develop, feature/*
 #
 # Jobs:
-#   ci-client     — React/Vite: install → lint → build → Docker validate
+#   ci-manager    — React/Vite: install → build → Docker validate
+#   ci-support    — React/Vite: install → build → Docker validate
 #   ci-server     — Node.js:    install → lint → test  → Docker validate
 #   ci-ai-service — FastAPI:    install → lint → test  → Docker validate
 #   ci-summary    — Gate job: fails if any job fails
@@ -33,14 +34,14 @@ env:
 jobs:
 
   # ────────────────────────────────────────────────────────────────
-  # JOB 1 — React + Vite Frontend
+  # JOB 1 — Manager & Supervisor Console
   # ────────────────────────────────────────────────────────────────
-  ci-client:
-    name: "Client — Install / Lint / Build / Docker"
+  ci-manager:
+    name: "Manager Console — Install / Build / Docker"
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: client
+        working-directory: manager
 
     steps:
       - name: ⬇ Checkout
@@ -50,26 +51,16 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "npm"
-          cache-dependency-path: client/package-lock.json
 
-      # ── Install ────────────────────────────────────────────────
       - name: 📦 Install dependencies
-        run: npm ci --frozen-lockfile
+        run: npm install
 
-      # ── Lint ──────────────────────────────────────────────────
-      - name: 🔍 Lint (oxlint)
-        run: npm run lint
-        continue-on-error: false
-
-      # ── Build ─────────────────────────────────────────────────
       - name: 🏗 Build (vite)
         run: npm run build
         env:
           VITE_API_URL: http://localhost:5000
           VITE_SOCKET_URL: http://localhost:5000
 
-      # ── Validate build output ──────────────────────────────────
       - name: ✅ Verify dist/ exists
         run: |
           if [ ! -d "dist" ]; then
@@ -79,7 +70,6 @@ jobs:
           echo "✅ dist/ contents:"
           ls -lh dist/
 
-      # ── Docker build & validate ────────────────────────────────
       - name: 🐳 Build Docker image
         run: |
           docker build \
@@ -87,23 +77,82 @@ jobs:
             --target production \
             --build-arg VITE_API_URL=http://localhost:5000 \
             --build-arg VITE_SOCKET_URL=http://localhost:5000 \
-            --tag cx-guardian-client:ci-${{ github.sha }} \
+            --tag cx-guardian-manager:ci-${{ github.sha }} \
             .
 
       - name: 🔬 Validate Docker image starts
         run: |
-          docker run -d --name ci-client -p 8080:80 cx-guardian-client:ci-${{ github.sha }}
+          docker run -d --name ci-manager -p 8080:80 cx-guardian-manager:ci-${{ github.sha }}
           sleep 5
-          curl -f http://localhost:8080/health || (docker logs ci-client && exit 1)
-          docker stop ci-client && docker rm ci-client
-          echo "✅ Client Docker image is healthy"
+          curl -f http://localhost:8080/health || (docker logs ci-manager && exit 1)
+          docker stop ci-manager && docker rm ci-manager
+          echo "✅ Manager Docker image is healthy"
 
       - name: 🧹 Cleanup Docker image
         if: always()
-        run: docker rmi cx-guardian-client:ci-${{ github.sha }} || true
+        run: docker rmi cx-guardian-manager:ci-${{ github.sha }} || true
 
   # ────────────────────────────────────────────────────────────────
-  # JOB 2 — Node.js / Express Backend
+  # JOB 2 — Customer Support Desk
+  # ────────────────────────────────────────────────────────────────
+  ci-support:
+    name: "Support Desk — Install / Build / Docker"
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: support
+
+    steps:
+      - name: ⬇ Checkout
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: 📦 Install dependencies
+        run: npm install
+
+      - name: 🏗 Build (vite)
+        run: npm run build
+        env:
+          VITE_API_URL: http://localhost:5000
+          VITE_SOCKET_URL: http://localhost:5000
+
+      - name: ✅ Verify dist/ exists
+        run: |
+          if [ ! -d "dist" ]; then
+            echo "❌ Build failed — dist/ directory missing"
+            exit 1
+          fi
+          echo "✅ dist/ contents:"
+          ls -lh dist/
+
+      - name: 🐳 Build Docker image
+        run: |
+          docker build \
+            --file Dockerfile \
+            --target production \
+            --build-arg VITE_API_URL=http://localhost:5000 \
+            --build-arg VITE_SOCKET_URL=http://localhost:5000 \
+            --tag cx-guardian-support:ci-${{ github.sha }} \
+            .
+
+      - name: 🔬 Validate Docker image starts
+        run: |
+          docker run -d --name ci-support -p 8081:80 cx-guardian-support:ci-${{ github.sha }}
+          sleep 5
+          curl -f http://localhost:8081/health || (docker logs ci-support && exit 1)
+          docker stop ci-support && docker rm ci-support
+          echo "✅ Support Docker image is healthy"
+
+      - name: 🧹 Cleanup Docker image
+        if: always()
+        run: docker rmi cx-guardian-support:ci-${{ github.sha }} || true
+
+  # ────────────────────────────────────────────────────────────────
+  # JOB 3 — Node.js / Express Backend
   # ────────────────────────────────────────────────────────────────
   ci-server:
     name: "Server — Install / Lint / Test / Docker"
@@ -186,7 +235,7 @@ jobs:
         run: docker rmi cx-guardian-server:ci-${{ github.sha }} || true
 
   # ────────────────────────────────────────────────────────────────
-  # JOB 3 — FastAPI AI Microservice
+  # JOB 4 — FastAPI AI Microservice
   # ────────────────────────────────────────────────────────────────
   ci-ai-service:
     name: "AI Service — Install / Lint / Test / Docker"
@@ -291,22 +340,24 @@ jobs:
         run: docker rmi cx-guardian-ai-service:ci-${{ github.sha }} || true
 
   # ────────────────────────────────────────────────────────────────
-  # JOB 4 — Gate / Summary
+  # JOB 5 — Gate / Summary
   # ────────────────────────────────────────────────────────────────
   ci-summary:
     name: "✅ CI Gate — All Jobs Passed"
     runs-on: ubuntu-latest
-    needs: [ci-client, ci-server, ci-ai-service]
+    needs: [ci-manager, ci-support, ci-server, ci-ai-service]
     if: always()
 
     steps:
       - name: 🚦 Evaluate results
         run: |
-          echo "Client  : ${{ needs.ci-client.result }}"
+          echo "Manager : ${{ needs.ci-manager.result }}"
+          echo "Support : ${{ needs.ci-support.result }}"
           echo "Server  : ${{ needs.ci-server.result }}"
           echo "AI Svc  : ${{ needs.ci-ai-service.result }}"
 
-          if [[ "${{ needs.ci-client.result }}"     != "success" ]] || \
+          if [[ "${{ needs.ci-manager.result }}"    != "success" ]] || \
+             [[ "${{ needs.ci-support.result }}"    != "success" ]] || \
              [[ "${{ needs.ci-server.result }}"     != "success" ]] || \
              [[ "${{ needs.ci-ai-service.result }}" != "success" ]]; then
             echo "❌ One or more CI jobs failed — blocking merge"

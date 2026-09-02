@@ -1,5 +1,5 @@
 # ══════════════════════════════════════════════════════════════════
-# Dockerfile — React + Vite Frontend (client/)
+# Dockerfile — Customer Support Desk (support/)
 # Multi-stage: build → nginx production server
 # ══════════════════════════════════════════════════════════════════
 
@@ -7,13 +7,13 @@
 FROM node:20-alpine AS builder
 
 LABEL stage="builder"
-LABEL app="cx-guardian-client"
+LABEL app="cx-guardian-support"
 
 WORKDIR /app
 
 # Install dependencies first (cached layer)
 COPY package.json package-lock.json* ./
-RUN npm ci --frozen-lockfile
+RUN npm install
 
 # Copy source and build
 COPY . .
@@ -29,7 +29,7 @@ RUN npm run build
 # ── Stage 2: Production nginx server ─────────────────────────────
 FROM nginx:1.27-alpine AS production
 
-LABEL app="cx-guardian-client"
+LABEL app="cx-guardian-support"
 LABEL version="1.0.0"
 
 # Remove default nginx content

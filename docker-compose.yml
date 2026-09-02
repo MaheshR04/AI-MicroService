@@ -6,7 +6,8 @@
 #   mongo      — MongoDB 7 (persistent storage)
 #   ai-service — FastAPI Python AI Microservice  :8000
 #   server     — Node.js / Express Backend       :5000
-#   client     — React + Vite / nginx Frontend   :80
+#   manager    — Manager Console (Vite/nginx)     :5173
+#   support    — Support Desk (Vite/nginx)        :5174
 #
 # Networks:
 #   cx-backend  — Internal network (mongo ↔ ai-service ↔ server)
@@ -178,23 +179,22 @@ services:
         max-size: "20m"
         max-file: "5"
 
-  # ── 4. React + Vite Frontend (nginx) ──────────────────────────
-  client:
+  # ── 4. Manager & Supervisor Console (nginx) ───────────────────
+  manager:
     build:
-      context: ./client
+      context: ./manager
       dockerfile: Dockerfile
       target: production
       args:
-        # Injected at BUILD TIME — Vite bakes these into the JS bundle
         VITE_API_URL: ${VITE_API_URL:-http://localhost:5000}
         VITE_SOCKET_URL: ${VITE_SOCKET_URL:-http://localhost:5000}
-    container_name: cx-client
+    container_name: cx-manager
     restart: unless-stopped
     depends_on:
       server:
         condition: service_healthy
     ports:
-      - "${CLIENT_PORT:-80}:80"
+      - "${MANAGER_PORT:-5173}:80"
     networks:
       - cx-frontend
     healthcheck:
@@ -208,3 +208,34 @@ services:
       options:
         max-size: "5m"
         max-file: "3"
+
+  # ── 5. Customer Support Desk (nginx) ───────────────────────────
+  support:
+    build:
+      context: ./support
+      dockerfile: Dockerfile
+      target: production
+      args:
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:5000}
+        VITE_SOCKET_URL: ${VITE_SOCKET_URL:-http://localhost:5000}
+    container_name: cx-support
+    restart: unless-stopped
+    depends_on:
+      server:
+        condition: service_healthy
+    ports:
+      - "${SUPPORT_PORT:-5174}:80"
+    networks:
+      - cx-frontend
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "3"
+
