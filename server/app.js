@@ -68,16 +68,6 @@ app.use(cacheMiddleware);
 // ── 8. Response helpers & logging ────────────────────────────────
 app.use(responseFormatter);
 
-app.use((req, res, next) => {
-  const start = Date.now();
-  res.on('finish', () => {
-    const ms = Date.now() - start;
-    res.setHeader('X-Response-Time', `${ms}ms`);
-    logger.http.request(req.method, req.originalUrl, res.statusCode, ms);
-  });
-  next();
-});
-
 app.use(requestLogger);
 
 // ── 9. Route dispatching ─────────────────────────────────────────

@@ -2,7 +2,9 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const AuthContext = createContext(null);
 
-// Default seed accounts for out-of-the-box demo & validation
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
+// Default seed accounts for demo fallback
 const DEFAULT_ACCOUNTS = [
   {
     id: 'usr-1',
@@ -38,7 +40,6 @@ export function AuthProvider({ children }) {
         setUser(JSON.parse(storedUser));
       }
 
-      // Initialize default accounts in storage if not set
       const storedAccounts = localStorage.getItem('cx_registered_accounts');
       if (!storedAccounts) {
         localStorage.setItem('cx_registered_accounts', JSON.stringify(DEFAULT_ACCOUNTS));
@@ -60,62 +61,136 @@ export function AuthProvider({ children }) {
   };
 
   const login = async (email, password, expectedRole = null) => {
-    const accounts = getAccounts();
     const cleanEmail = email.trim().toLowerCase();
     const cleanPass = password.trim();
+    let backendUser = null;
+    let backendToken = null;
 
+    // 1. Authenticate with MongoDB Atlas via Backend API
+    try {
+      const response = await fetch(`${API_URL}/api/v1/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: cleanEmail, password: cleanPass })
+      });
+
+      if (response.ok) {
+        const json = await response.json();
+        const data = json.data || {};
+        backendUser = data.user;
+        backendToken = data.token;
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        if (response.status === 401 || response.status === 400) {
+          throw new Error(errorData.message || 'Invalid email or password.');
+        }
+      }
+    } catch (apiErr) {
+      if (apiErr.message && !apiErr.message.includes('Failed to fetch') && !apiErr.message.includes('NetworkError')) {
+        throw apiErr;
+      }
+      console.warn('[Auth] Backend API unreachable, falling back to local accounts:', apiErr.message);
+    }
+
+    const accounts = getAccounts();
     const matchedAccount = accounts.find(
       (acc) => acc.email.toLowerCase() === cleanEmail
     );
 
-    if (!matchedAccount) {
+    if (!matchedAccount && !backendUser) {
       throw new Error(`No account registered with email '${email}'. Please register first.`);
     }
 
-    if (matchedAccount.password !== cleanPass) {
+    if (matchedAccount && !backendUser && matchedAccount.password !== cleanPass) {
       throw new Error('Invalid password. Please check your credentials.');
     }
 
-    // If expectedRole is provided and differs, update role to what user selected
-    const activeRole = expectedRole || matchedAccount.role || 'manager';
+    const activeRole = expectedRole || backendUser?.role || matchedAccount?.role || 'manager';
 
     const authSession = {
-      id: matchedAccount.id,
-      name: matchedAccount.name,
-      email: matchedAccount.email,
+      id: backendUser?.userId || matchedAccount?.id || `usr-${Date.now()}`,
+      name: backendUser?.name || matchedAccount?.name || cleanEmail.split('@')[0],
+      email: cleanEmail,
       role: activeRole,
       title: activeRole === 'manager' ? 'Operations Manager' : 'Support Specialist',
-      company: matchedAccount.company || 'Enterprise AI Corp',
-      avatar: matchedAccount.avatar || matchedAccount.name.slice(0, 2).toUpperCase(),
-      token: `jwt_sim_${Date.now()}_${matchedAccount.id}`
+      company: backendUser?.company || matchedAccount?.company || 'Enterprise AI Corp',
+      avatar: (backendUser?.name || matchedAccount?.name || cleanEmail).slice(0, 2).toUpperCase(),
+      token: backendToken || matchedAccount?.token || `jwt_${Date.now()}`
     };
 
     setUser(authSession);
     localStorage.setItem('cx_auth_user', JSON.stringify(authSession));
 
-    // Update in registered list too
-    const updatedAccounts = accounts.map(acc => 
-      acc.email.toLowerCase() === cleanEmail ? { ...acc, role: activeRole } : acc
-    );
+    // Save to registered list in sync
+    const updatedAccounts = accounts.filter(acc => acc.email.toLowerCase() !== cleanEmail);
+    updatedAccounts.push({
+      id: authSession.id,
+      name: authSession.name,
+      email: cleanEmail,
+      password: cleanPass,
+      role: activeRole,
+      title: authSession.title,
+      company: authSession.company,
+      avatar: authSession.avatar
+    });
     localStorage.setItem('cx_registered_accounts', JSON.stringify(updatedAccounts));
 
     return authSession;
   };
 
   const register = async ({ name, email, password, role, company }) => {
-    const accounts = getAccounts();
     const cleanEmail = email.trim().toLowerCase();
     const selectedRole = role || 'agent';
+    let backendUser = null;
+    let backendToken = null;
 
+    // 1. Post directly to MongoDB Atlas via Backend API
+    try {
+      const response = await fetch(`${API_URL}/api/v1/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: name.trim(),
+          email: cleanEmail,
+          password: password.trim(),
+          role: selectedRole,
+          company: company ? company.trim() : 'Enterprise Client'
+        })
+      });
+
+      if (response.ok) {
+        const json = await response.json();
+        const data = json.data || {};
+        backendUser = data.user;
+        backendToken = data.token;
+        console.log('[Auth] User successfully stored in MongoDB Atlas:', backendUser);
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        if (response.status === 409) {
+          throw new Error(`An account with email "${email}" already exists. Please log in.`);
+        }
+        if (errorData.message) {
+          throw new Error(errorData.message);
+        }
+      }
+    } catch (apiErr) {
+      if (apiErr.message && !apiErr.message.includes('Failed to fetch') && !apiErr.message.includes('NetworkError')) {
+        throw apiErr;
+      }
+      console.warn('[Auth] Backend server connection error, storing locally:', apiErr.message);
+    }
+
+    // 2. Local persistence and user session setup
+    const accounts = getAccounts();
     const existingIdx = accounts.findIndex((acc) => acc.email.toLowerCase() === cleanEmail);
 
     let updatedAccounts;
     let newAccount;
 
     if (existingIdx >= 0) {
-      // Account exists, update with latest role and credentials
       newAccount = {
         ...accounts[existingIdx],
+        id: backendUser?.userId || accounts[existingIdx].id,
         name: name.trim() || accounts[existingIdx].name,
         password: password.trim() || accounts[existingIdx].password,
         role: selectedRole,
@@ -127,7 +202,7 @@ export function AuthProvider({ children }) {
       updatedAccounts[existingIdx] = newAccount;
     } else {
       newAccount = {
-        id: `usr-${Date.now()}`,
+        id: backendUser?.userId || `usr-${Date.now()}`,
         name: name.trim(),
         email: cleanEmail,
         password: password.trim(),
@@ -141,7 +216,6 @@ export function AuthProvider({ children }) {
 
     localStorage.setItem('cx_registered_accounts', JSON.stringify(updatedAccounts));
 
-    // Automatically log in the registered user with their chosen role
     const authSession = {
       id: newAccount.id,
       name: newAccount.name,
@@ -150,7 +224,7 @@ export function AuthProvider({ children }) {
       title: newAccount.title,
       company: newAccount.company,
       avatar: newAccount.avatar,
-      token: `jwt_sim_${Date.now()}_${newAccount.id}`
+      token: backendToken || `jwt_${Date.now()}_${newAccount.id}`
     };
 
     setUser(authSession);
@@ -158,7 +232,6 @@ export function AuthProvider({ children }) {
     return authSession;
   };
 
-  // Instant one-click role switch for live testing
   const switchRole = (targetRole) => {
     if (!user) return;
     const newRole = targetRole || (user.role === 'manager' ? 'agent' : 'manager');
@@ -170,7 +243,6 @@ export function AuthProvider({ children }) {
     setUser(updatedUser);
     localStorage.setItem('cx_auth_user', JSON.stringify(updatedUser));
 
-    // Update in registered accounts too
     const accounts = getAccounts();
     const updatedAccounts = accounts.map(acc => 
       acc.email.toLowerCase() === user.email.toLowerCase() ? { ...acc, role: newRole } : acc
@@ -189,12 +261,12 @@ export function AuthProvider({ children }) {
     <AuthContext.Provider
       value={{
         user,
+        isAuthenticated: Boolean(user),
         loading,
-        isAuthenticated: !!user,
         login,
         register,
-        switchRole,
-        logout
+        logout,
+        switchRole
       }}
     >
       {children}
@@ -209,4 +281,3 @@ export function useAuth() {
   }
   return context;
 }
-export default AuthContext;

@@ -3,7 +3,7 @@ import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 export default function ProtectedRoute({ allowedRoles = [] }) {
-  const { user, isAuthenticated, loading } = useAuth();
+  const { user, loading } = useAuth();
   const location = useLocation();
 
   if (loading) {
@@ -17,7 +17,9 @@ export default function ProtectedRoute({ allowedRoles = [] }) {
     );
   }
 
-  if (!isAuthenticated || !user) {
+  const isAuth = !!user;
+
+  if (!isAuth) {
     // Redirect to login page and preserve attempt path
     return <Navigate to="/login" state={{ from: location }} replace />;
   }

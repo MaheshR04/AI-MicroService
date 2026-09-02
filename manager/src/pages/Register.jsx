@@ -17,7 +17,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 
 export default function Register() {
-  const [role, setRole] = useState('manager'); // 'manager' | 'agent'
+  const role = 'manager';
   const [name, setName] = useState('');
   const [companyName, setCompanyName] = useState('');
   const [email, setEmail] = useState('');
@@ -41,20 +41,15 @@ export default function Register() {
     setIsLoading(true);
 
     try {
-      const session = await register({
+      await register({
         name,
         company: companyName,
         email,
         password,
-        role
+        role: 'manager'
       });
 
-      // Redirect to the appropriate dashboard
-      if (session.role === 'manager') {
-        navigate('/dashboard');
-      } else {
-        navigate('/agent-dashboard');
-      }
+      navigate('/dashboard', { replace: true });
     } catch (err) {
       setErrorMessage(err.message || 'Registration failed. Please try again.');
     } finally {
@@ -106,10 +101,10 @@ export default function Register() {
           
           <div>
             <h1 className="text-2xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">
-              Create Enterprise Account
+              Create a New Account
             </h1>
             <p className="text-[11px] text-slate-400 mt-1 font-medium">
-              Register as an Operations Manager or Customer Support Agent
+              Enter your details to create your manager account and get started
             </p>
           </div>
 
@@ -120,50 +115,6 @@ export default function Register() {
               <span className="text-[11px]">{errorMessage}</span>
             </div>
           )}
-
-          {/* ROLE SELECTOR */}
-          <div className="space-y-1.5">
-            <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
-              Choose Your Role
-            </label>
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={() => setRole('manager')}
-                className={`p-3 rounded-xl border text-left cursor-pointer transition-all flex items-center gap-3 ${
-                  role === 'manager'
-                    ? 'border-primary bg-blue-50/70 dark:bg-blue-950/40 shadow-sm ring-2 ring-primary/40'
-                    : 'border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800'
-                }`}
-              >
-                <div className={`p-2 rounded-lg ${role === 'manager' ? 'bg-primary text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}`}>
-                  <LayoutDashboard className="w-4 h-4" />
-                </div>
-                <div>
-                  <span className="text-xs font-bold text-slate-900 dark:text-slate-100 block">Manager</span>
-                  <span className="text-[10px] text-slate-400">Executive Console</span>
-                </div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setRole('agent')}
-                className={`p-3 rounded-xl border text-left cursor-pointer transition-all flex items-center gap-3 ${
-                  role === 'agent'
-                    ? 'border-primary bg-blue-50/70 dark:bg-blue-950/40 shadow-sm ring-2 ring-primary/40'
-                    : 'border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800'
-                }`}
-              >
-                <div className={`p-2 rounded-lg ${role === 'agent' ? 'bg-primary text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}`}>
-                  <Headphones className="w-4 h-4" />
-                </div>
-                <div>
-                  <span className="text-xs font-bold text-slate-900 dark:text-slate-100 block">Support Agent</span>
-                  <span className="text-[10px] text-slate-400">Triage Desk</span>
-                </div>
-              </button>
-            </div>
-          </div>
 
           <form onSubmit={handleRegister} className="space-y-3.5">
             
@@ -246,7 +197,7 @@ export default function Register() {
             >
               {isLoading ? 'Creating Account...' : (
                 <>
-                  Register & Enter {role === 'manager' ? 'Manager Dashboard' : 'Support Desk'} <ArrowRight className="w-4 h-4" />
+                  Create a New Account <ArrowRight className="w-4 h-4" />
                 </>
               )}
             </button>
