@@ -89,13 +89,13 @@ export default function ManagerDashboard() {
         {stats.map((stat, i) => {
           const Icon = stat.icon;
           return (
-            <div key={i} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm hover:shadow-md transition-shadow duration-200">
+            <div key={i} className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800/90 rounded-2xl p-5 shadow-sm card-hover">
               <div className="flex justify-between items-start">
                 <div>
                   <span className="text-slate-400 text-xs font-semibold uppercase tracking-wider">{stat.label}</span>
-                  <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mt-1">{stat.value}</h3>
+                  <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mt-1 font-mono">{stat.value}</h3>
                 </div>
-                <div className={`p-2.5 rounded-lg ${stat.color}`}>
+                <div className={`p-2.5 rounded-xl ${stat.color}`}>
                   <Icon className="w-5 h-5" />
                 </div>
               </div>
@@ -111,7 +111,7 @@ export default function ManagerDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {/* TABBED CONSOLE TABLES (2 COLS) */}
-        <div className="lg:col-span-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm overflow-hidden flex flex-col justify-between">
+        <div className="lg:col-span-2 bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800/90 rounded-2xl shadow-sm overflow-hidden flex flex-col justify-between">
           <div>
             {/* Tab header selector */}
             <div className="px-6 py-5 border-b border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-50/50 dark:bg-slate-800/40">
@@ -308,7 +308,7 @@ export default function ManagerDashboard() {
         <div className="space-y-6">
           
           {/* CRITICAL ESCALATION ALERTS (SYNCHRONIZED LIVE) */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm space-y-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800/90 rounded-2xl p-5 shadow-sm space-y-4">
             <div className="flex justify-between items-center">
               <div>
                 <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
@@ -380,7 +380,7 @@ export default function ManagerDashboard() {
           </div>
 
           {/* AUTOPILOT INTEGRITY */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm space-y-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800/90 rounded-2xl p-5 shadow-sm space-y-4">
             <div>
               <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">Autopilot Infrastructure</h3>
               <p className="text-[11px] text-slate-400 mt-0.5">Autonomous core system health status</p>

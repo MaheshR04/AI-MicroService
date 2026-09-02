@@ -9,8 +9,9 @@
     "server"
   ],
   "scripts": {
-    "dev:manager": "concurrently -n \"SERVER,MANAGER\" -c \"cyan,magenta\" \"npm run dev --workspace server\" \"npm run dev --workspace manager\"",
-    "dev:support": "concurrently -n \"SERVER,SUPPORT\" -c \"cyan,blue\" \"npm run dev --workspace server\" \"npm run dev --workspace support\"",
+    "dev": "concurrently \"npm run dev --workspace server\" \"npm run dev --workspace manager\" \"npm run dev --workspace support\"",
+    "dev:manager": "npm run dev --workspace manager",
+    "dev:support": "npm run dev --workspace support",
     "dev:server": "npm run dev --workspace server",
     "build": "npm run build --workspace manager && npm run build --workspace support",
     "start": "npm run start --workspace server",

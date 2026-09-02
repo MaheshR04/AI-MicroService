@@ -13,7 +13,11 @@ import {
   Meh, 
   FileText, 
   Flame, 
-  LifeBuoy
+  LifeBuoy,
+  Zap,
+  Building2,
+  Mail,
+  CornerDownLeft
 } from 'lucide-react';
 import { useTickets } from '../context/TicketContext';
 import { useAuth } from '../context/AuthContext';
@@ -32,10 +36,10 @@ export default function SupportAgentDashboard() {
 
   // Quick Canned Responses
   const cannedResponses = [
-    { label: '🔍 Investigating Issue', text: 'Thank you for providing the details. I am actively investigating this with our technical team and will update you shortly.' },
-    { label: '💳 Refund Approved', text: 'I have reviewed your request and successfully processed the refund. You should see the credit reflected on your statement in 3-5 business days.' },
-    { label: '🔑 Credentials Reset', text: 'We have generated a secure password/token reset link for your account. Please check your registered email address.' },
-    { label: '📄 Requesting Error Logs', text: 'Could you please share your latest request ID or application logs so we can diagnose this edge case immediately?' },
+    { label: '🔍 Investigating', text: 'Thank you for providing the details. I am actively investigating this with our technical team and will update you shortly.' },
+    { label: '💳 Refund Done', text: 'I have reviewed your request and successfully processed the refund. You should see the credit reflected on your statement in 3-5 business days.' },
+    { label: '🔑 Pass Reset', text: 'We have generated a secure password/token reset link for your account. Please check your registered email address.' },
+    { label: '📄 Request Logs', text: 'Could you please share your latest request ID or application logs so we can diagnose this edge case immediately?' },
   ];
 
   // Active selected ticket object
@@ -80,7 +84,7 @@ export default function SupportAgentDashboard() {
     showNotification(`Reply sent to ${activeTicket.customer}. Synced with Manager dashboard!`);
   };
 
-  // Solve & Close Ticket action (Moves to Solved in real-time)
+  // Solve & Close Ticket action
   const handleSolveTicket = () => {
     if (!activeTicket.id) return;
     const agentName = user?.name || 'Alex Morgan (Support Agent)';
@@ -88,7 +92,7 @@ export default function SupportAgentDashboard() {
     showNotification(`Ticket ${activeTicket.id} marked as Solved and synced with Manager Dashboard!`);
   };
 
-  // Escalate Ticket action (Moves to High/Critical Escalation and notifies Manager)
+  // Escalate Ticket action
   const handleEscalateTicket = () => {
     if (!activeTicket.id) return;
     const agentName = user?.name || 'Alex Morgan (Support Agent)';
@@ -108,11 +112,11 @@ export default function SupportAgentDashboard() {
   };
 
   return (
-    <div className="space-y-5 max-w-7xl mx-auto">
+    <div className="space-y-4 max-w-7xl mx-auto font-sans">
       
       {/* SUCCESS ACTION BANNER */}
       {actionSuccessMessage && (
-        <div className="bg-emerald-500 text-white px-4 py-2.5 rounded-xl text-xs font-semibold shadow-md flex items-center justify-between animate-fade-in">
+        <div className="bg-emerald-600 text-white px-4 py-2.5 rounded-xl text-xs font-semibold shadow-lg shadow-emerald-600/20 flex items-center justify-between animate-in fade-in slide-in-from-top-2 duration-200">
           <div className="flex items-center gap-2">
             <CheckCircle2 className="w-4 h-4 shrink-0" />
             <span>{actionSuccessMessage}</span>
@@ -122,91 +126,93 @@ export default function SupportAgentDashboard() {
       )}
 
       {/* TOP HEADER & LIVE METRICS STRIP */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
         
         {/* AGENT PROFILE / STATUS CARD */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm flex items-center gap-3.5">
-          <div className="relative">
-            <div className="w-12 h-12 bg-gradient-to-tr from-blue-600 to-indigo-500 rounded-xl flex items-center justify-center text-white font-bold text-sm shadow-md">
-              <Headphones className="w-6 h-6" />
+        <div className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800/90 rounded-2xl p-3.5 shadow-sm card-hover flex items-center gap-3">
+          <div className="relative shrink-0">
+            <div className="w-11 h-11 bg-gradient-to-tr from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center text-white font-bold text-sm shadow-md shadow-blue-500/20">
+              <Headphones className="w-5 h-5" />
             </div>
-            <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-500 border-2 border-white dark:border-slate-900 rounded-full"></span>
+            <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 border-2 border-white dark:border-slate-900 rounded-full animate-pulse"></span>
           </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">{user?.name || 'Alex Morgan'}</h3>
-              <span className="text-[9px] bg-blue-50 dark:bg-blue-950/40 text-primary border border-blue-100 dark:border-blue-800 font-bold px-1.5 py-0.5 rounded">
-                Tier-2 Agent
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5">
+              <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">{user?.name || 'Alex Morgan'}</h3>
+              <span className="text-[9px] bg-blue-50 dark:bg-blue-950/60 text-primary border border-blue-200 dark:border-blue-800 font-bold px-1.5 py-0.2 rounded">
+                Tier-2
               </span>
             </div>
-            <p className="text-[11px] text-slate-400 mt-0.5">Human Supporter Workspace</p>
+            <p className="text-[11px] text-slate-400 mt-0.5 font-medium truncate">Human Support Desk</p>
           </div>
         </div>
 
         {/* METRIC 1: NORMAL QUEUE */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm flex items-center justify-between">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800/90 rounded-2xl p-3.5 shadow-sm card-hover flex items-center justify-between">
           <div>
             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Normal Queue</span>
-            <span className="text-2xl font-extrabold text-slate-800 dark:text-slate-100 mt-0.5 block">{normalQueueCount} Active</span>
+            <span className="text-xl font-extrabold text-slate-900 dark:text-slate-100 mt-0.5 block">{normalQueueCount} Active</span>
             <span className="text-[10px] text-slate-400 font-medium">Standard SLA</span>
           </div>
-          <div className="p-3 bg-blue-50 dark:bg-blue-950/30 text-primary rounded-xl">
+          <div className="p-2.5 bg-blue-50 dark:bg-blue-950/50 text-primary rounded-xl">
             <LifeBuoy className="w-5 h-5" />
           </div>
         </div>
 
         {/* METRIC 2: HIGH/CRITICAL ESCALATIONS */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm flex items-center justify-between">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800/90 rounded-2xl p-3.5 shadow-sm card-hover flex items-center justify-between">
           <div>
             <span className="text-[10px] font-bold text-red-500 uppercase tracking-wider block">High / Critical</span>
-            <span className="text-2xl font-extrabold text-red-600 dark:text-red-400 mt-0.5 block">{criticalQueueCount} Escalated</span>
-            <span className="text-[10px] text-red-500 font-semibold">Priority SLA Attention</span>
+            <span className="text-xl font-extrabold text-red-600 dark:text-red-400 mt-0.5 block">{criticalQueueCount} Escalated</span>
+            <span className="text-[10px] text-red-500 font-semibold flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping"></span> Priority SLA
+            </span>
           </div>
-          <div className="p-3 bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 rounded-xl">
+          <div className="p-2.5 bg-red-50 dark:bg-red-950/50 text-red-600 dark:text-red-400 rounded-xl">
             <Flame className="w-5 h-5" />
           </div>
         </div>
 
         {/* METRIC 3: SOLVED TODAY */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm flex items-center justify-between">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800/90 rounded-2xl p-3.5 shadow-sm card-hover flex items-center justify-between">
           <div>
-            <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider block">Solved Today</span>
-            <span className="text-2xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-0.5 block">{solvedTodayCount} Cases</span>
-            <span className="text-[10px] text-emerald-600 font-semibold">100% CSAT Rating</span>
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Solved Today</span>
+            <span className="text-xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-0.5 block">{solvedTodayCount} Cases</span>
+            <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">100% CSAT Rating</span>
           </div>
-          <div className="p-3 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 rounded-xl">
+          <div className="p-2.5 bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 rounded-xl">
             <CheckCircle2 className="w-5 h-5" />
           </div>
         </div>
 
       </div>
 
-      {/* FILTER & SEARCH CONTROL STRIP */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 shadow-sm flex flex-col sm:flex-row justify-between items-center gap-3">
+      {/* FILTER BUTTONS & SEARCH BAR */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 rounded-2xl p-2.5 shadow-sm">
         
         {/* Queue category tabs */}
-        <div className="flex flex-wrap items-center gap-1.5 w-full sm:w-auto">
+        <div className="flex flex-wrap gap-1">
           {[
             { id: 'All', label: 'All Cases', count: tickets.length },
-            { id: 'Normal', label: '🟢 Normal Queue', count: normalQueueCount },
-            { id: 'High/Critical', label: '🔴 High / Critical', count: criticalQueueCount },
-            { id: 'Pending', label: '⏳ In-Progress / Pending', count: tickets.filter(t => t.status === 'Pending' || t.status === 'In Progress').length },
-            { id: 'Solved', label: '✅ Solved', count: solvedTodayCount },
+            { id: 'Normal', label: 'Normal Queue', count: normalQueueCount, color: 'text-blue-500' },
+            { id: 'High/Critical', label: 'Critical Alert', count: criticalQueueCount, color: 'text-red-500' },
+            { id: 'Pending', label: 'Pending', count: tickets.filter(t => t.status === 'Pending' || t.status === 'In Progress').length },
+            { id: 'Solved', label: 'Solved', count: solvedTodayCount, color: 'text-emerald-500' },
           ].map(tab => (
             <button
               key={tab.id}
               onClick={() => setActiveFilter(tab.id)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer transition-all flex items-center gap-1.5 ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-semibold cursor-pointer transition-all flex items-center gap-1.5 ${
                 activeFilter === tab.id
-                  ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 shadow-sm'
-                  : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                  ? 'bg-primary text-white shadow-sm shadow-blue-500/20'
+                  : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/70'
               }`}
             >
               <span>{tab.label}</span>
               <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
                 activeFilter === tab.id
-                  ? 'bg-white/20 text-white dark:bg-slate-900/20 dark:text-slate-900'
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-500'
+                  ? 'bg-white/20 text-white'
+                  : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
               }`}>
                 {tab.count}
               </span>
@@ -222,19 +228,19 @@ export default function SupportAgentDashboard() {
             placeholder="Search tickets, customers..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 pl-8 pr-3 py-1.5 rounded-lg text-xs outline-none focus:border-primary focus:bg-white dark:focus:bg-slate-900 transition-colors"
+            className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 pl-8 pr-3 py-1.5 rounded-xl text-xs outline-none focus:border-primary focus:bg-white dark:focus:bg-slate-900 transition-colors"
           />
         </div>
 
       </div>
 
       {/* SPLIT WORKSPACE: TICKET QUEUE (LEFT) & RESOLUTION WORKBENCH (RIGHT) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 h-[calc(100vh-18rem)] min-h-[580px]">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 h-[calc(100vh-17.5rem)] min-h-[500px]">
         
         {/* LEFT COLUMN: TICKET INGESTION STREAM (4 COLS) */}
-        <div className="lg:col-span-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm flex flex-col overflow-hidden">
+        <div className="lg:col-span-4 bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800/90 rounded-2xl shadow-sm flex flex-col overflow-hidden">
           
-          <div className="p-3 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 flex justify-between items-center">
+          <div className="p-3.5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40 flex justify-between items-center">
             <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
               Triage Queue ({filteredTickets.length})
             </span>
@@ -258,48 +264,38 @@ export default function SupportAgentDashboard() {
                     onClick={() => setSelectedTicketId(ticket.id)}
                     className={`p-3.5 cursor-pointer text-left transition-all relative ${
                       isSelected 
-                        ? 'bg-blue-50/70 dark:bg-blue-950/30 border-l-4 border-primary' 
-                        : 'hover:bg-slate-50 dark:hover:bg-slate-800/50'
+                        ? 'bg-blue-50/90 dark:bg-blue-950/40 border-l-4 border-primary' 
+                        : 'hover:bg-slate-50/70 dark:hover:bg-slate-800/40'
                     }`}
                   >
-                    {/* Header Row: ID & Badges */}
-                    <div className="flex justify-between items-center mb-1">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-[11px] font-extrabold text-slate-900 dark:text-slate-100">{ticket.id}</span>
-                        <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider ${
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-mono font-bold text-primary">{ticket.id}</span>
+                        <span className={`text-[9px] font-bold px-2 py-0.2 rounded-full uppercase tracking-wider ${
                           isCritical
-                            ? 'bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300 border border-red-200'
-                            : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200'
+                            ? 'bg-red-100 text-red-700 dark:bg-red-950/60 dark:text-red-300 border border-red-200 dark:border-red-900/60'
+                            : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-900/60'
                         }`}>
                           {ticket.priority}
                         </span>
                       </div>
-                      <span className="text-[10px] text-slate-400">{ticket.time}</span>
+                      <span className="text-[10px] text-slate-400">{ticket.time || 'Just now'}</span>
                     </div>
 
-                    {/* Customer & Company */}
-                    <div className="flex items-center justify-between text-xs font-semibold text-slate-700 dark:text-slate-200 mb-1">
-                      <span className="truncate">{ticket.customer}</span>
-                      <span className="text-[10px] text-slate-400 font-normal truncate">{ticket.company}</span>
-                    </div>
-
-                    {/* Subject Line */}
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-2 leading-tight mb-2 font-normal">
+                    <h4 className="text-xs font-bold text-slate-800 dark:text-slate-100 truncate">
+                      {ticket.customer}
+                    </h4>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
                       {ticket.subject}
                     </p>
 
-                    {/* Footer Row: SLA & Channel */}
-                    <div className="flex items-center justify-between pt-1 border-t border-slate-100 dark:border-slate-800/60 text-[10px]">
-                      <div className="flex items-center gap-1">
-                        <Tag className="w-3 h-3 text-slate-400" />
-                        <span className="text-slate-500 font-medium">{ticket.category}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Clock className={`w-3 h-3 ${isCritical ? 'text-red-500' : 'text-slate-400'}`} />
-                        <span className={`font-semibold ${isCritical ? 'text-red-600 dark:text-red-400' : 'text-slate-500'}`}>
-                          SLA: {ticket.slaRemaining}
-                        </span>
-                      </div>
+                    <div className="flex items-center justify-between mt-2.5 pt-1.5 border-t border-slate-100 dark:border-slate-800/80 text-[10px] text-slate-400">
+                      <span className="flex items-center gap-1 font-medium text-slate-500 dark:text-slate-400">
+                        <Tag className="w-3 h-3" /> {ticket.category}
+                      </span>
+                      <span className="flex items-center gap-1 font-mono font-semibold text-slate-400">
+                        <Clock className="w-3 h-3" /> SLA: {ticket.slaRemaining}
+                      </span>
                     </div>
                   </div>
                 );
@@ -309,18 +305,19 @@ export default function SupportAgentDashboard() {
 
         </div>
 
-        {/* RIGHT COLUMN: INTERACTIVE TICKET RESOLVER WORKBENCH (8 COLS) */}
-        <div className="lg:col-span-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm flex flex-col overflow-hidden">
+        {/* RIGHT COLUMN: RESOLUTION WORKBENCH (8 COLS) */}
+        <div className="lg:col-span-8 bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800/90 rounded-2xl shadow-sm flex flex-col overflow-hidden">
           
-          {/* TICKET WORKBENCH HEADER */}
-          <div className="p-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30">
+          {/* TICKET TOP DETAILS BAR */}
+          <div className="p-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40">
+            
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-extrabold text-primary">{activeTicket.id}</span>
+                  <span className="text-xs font-mono font-extrabold text-primary">{activeTicket.id}</span>
                   <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
                     activeTicket.status === 'Solved' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300' :
-                    activeTicket.status === 'Escalated' ? 'bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300' :
+                    activeTicket.status === 'Escalated' ? 'bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300 animate-pulse' :
                     'bg-blue-100 text-primary dark:bg-blue-950 dark:text-blue-300'
                   }`}>
                     {activeTicket.status?.toUpperCase()}
@@ -339,7 +336,7 @@ export default function SupportAgentDashboard() {
                 {activeTicket.status !== 'Solved' && (
                   <button
                     onClick={handleSolveTicket}
-                    className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-sm transition-colors flex items-center gap-1 cursor-pointer"
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3.5 py-1.5 rounded-xl shadow-sm transition-colors flex items-center gap-1.5 cursor-pointer"
                   >
                     <Check className="w-3.5 h-3.5" /> Solve Ticket
                   </button>
@@ -348,7 +345,7 @@ export default function SupportAgentDashboard() {
                 {activeTicket.status !== 'Escalated' && activeTicket.status !== 'Solved' && (
                   <button
                     onClick={handleEscalateTicket}
-                    className="bg-red-50 hover:bg-red-100 dark:bg-red-950/50 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800 text-xs font-bold px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1 cursor-pointer"
+                    className="bg-red-50 hover:bg-red-100 dark:bg-red-950/50 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800 text-xs font-bold px-3 py-1.5 rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer"
                   >
                     <Flame className="w-3.5 h-3.5" /> Escalate to Manager
                   </button>
@@ -356,9 +353,9 @@ export default function SupportAgentDashboard() {
 
                 <button
                   onClick={() => setShowNoteInput(!showNoteInput)}
-                  className="bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1 cursor-pointer"
+                  className="bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold px-3 py-1.5 rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer"
                 >
-                  <FileText className="w-3.5 h-3.5" /> Note
+                  <FileText className="w-3.5 h-3.5" /> Staff Note
                 </button>
               </div>
             </div>
@@ -383,8 +380,8 @@ export default function SupportAgentDashboard() {
                   activeTicket.sentiment === 'Positive' ? 'text-emerald-600' :
                   activeTicket.sentiment === 'Negative' ? 'text-red-500' : 'text-slate-600'
                 }`}>
-                  {activeTicket.sentiment === 'Positive' ? <Smile className="w-3 h-3" /> :
-                   activeTicket.sentiment === 'Negative' ? <Frown className="w-3 h-3" /> : <Meh className="w-3 h-3" />}
+                  {activeTicket.sentiment === 'Positive' ? <Smile className="w-3.5 h-3.5" /> :
+                   activeTicket.sentiment === 'Negative' ? <Frown className="w-3.5 h-3.5" /> : <Meh className="w-3.5 h-3.5" />}
                   {activeTicket.sentiment}
                 </span>
               </div>
@@ -392,7 +389,7 @@ export default function SupportAgentDashboard() {
 
           </div>
 
-          {/* INTERNAL NOTE CREATOR BANNER (EXPANDABLE) */}
+          {/* INTERNAL NOTE CREATOR BANNER */}
           {showNoteInput && (
             <form onSubmit={handleAddNote} className="p-3 bg-amber-50 dark:bg-amber-950/30 border-b border-amber-200 dark:border-amber-900/50 flex gap-2">
               <input
@@ -400,11 +397,11 @@ export default function SupportAgentDashboard() {
                 placeholder="Type internal staff note (visible only to support agents & managers)..."
                 value={noteText}
                 onChange={(e) => setNoteText(e.target.value)}
-                className="flex-1 bg-white dark:bg-slate-800 border border-amber-300 dark:border-amber-800 px-3 py-1.5 rounded-lg text-xs outline-none"
+                className="flex-1 bg-white dark:bg-slate-800 border border-amber-300 dark:border-amber-800 px-3 py-1.5 rounded-xl text-xs outline-none"
               />
               <button
                 type="submit"
-                className="bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-sm cursor-pointer"
+                className="bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold px-3.5 py-1.5 rounded-xl shadow-sm cursor-pointer"
               >
                 Save Note
               </button>
@@ -418,7 +415,7 @@ export default function SupportAgentDashboard() {
             {activeTicket.internalNotes && activeTicket.internalNotes.length > 0 && (
               <div className="space-y-1.5">
                 {activeTicket.internalNotes.map((note, idx) => (
-                  <div key={idx} className="p-2.5 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/40 rounded-lg text-xs text-amber-900 dark:text-amber-200 flex items-start gap-2">
+                  <div key={idx} className="p-2.5 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/40 rounded-xl text-xs text-amber-900 dark:text-amber-200 flex items-start gap-2">
                     <FileText className="w-3.5 h-3.5 text-amber-600 mt-0.5 shrink-0" />
                     <div>
                       <span className="font-bold text-[10px] uppercase text-amber-700 dark:text-amber-400 block">Internal Staff Note</span>
@@ -436,8 +433,8 @@ export default function SupportAgentDashboard() {
 
               if (isSystem) {
                 return (
-                  <div key={index} className="p-2.5 bg-blue-50/80 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/30 rounded-xl text-center my-2 text-xs text-slate-600 dark:text-slate-300">
-                    <span className="font-bold text-primary flex items-center justify-center gap-1 text-[11px]">
+                  <div key={index} className="p-3 bg-blue-50/80 dark:bg-blue-950/30 border border-blue-200/80 dark:border-blue-900/40 rounded-2xl text-center my-2 text-xs text-slate-600 dark:text-slate-300">
+                    <span className="font-bold text-primary flex items-center justify-center gap-1.5 text-[11px]">
                       <Sparkles className="w-3.5 h-3.5" /> {msg.name}
                     </span>
                     <p className="text-[11px] mt-0.5 text-slate-500 dark:text-slate-400">{msg.text}</p>
@@ -451,7 +448,7 @@ export default function SupportAgentDashboard() {
                     <span className="text-[10px] font-bold text-slate-600 dark:text-slate-300">{msg.name}</span>
                     <span className="text-[9px] text-slate-400">{msg.time}</span>
                   </div>
-                  <div className={`max-w-xl p-3 rounded-2xl text-xs shadow-sm ${
+                  <div className={`max-w-xl p-3.5 rounded-2xl text-xs shadow-sm ${
                     isAgent
                       ? 'bg-primary text-white rounded-tr-none'
                       : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 rounded-tl-none'
@@ -465,7 +462,7 @@ export default function SupportAgentDashboard() {
           </div>
 
           {/* QUICK CANNED RESPONSES STRIP */}
-          <div className="p-2 bg-slate-50 dark:bg-slate-800/40 border-t border-slate-100 dark:border-slate-800 flex items-center gap-1.5 overflow-x-auto">
+          <div className="p-2 bg-slate-50 dark:bg-slate-800/40 border-t border-slate-100 dark:border-slate-800 flex items-center gap-1.5 overflow-x-auto shrink-0">
             <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider shrink-0 pl-1">
               Canned:
             </span>
@@ -473,7 +470,7 @@ export default function SupportAgentDashboard() {
               <button
                 key={idx}
                 onClick={() => setReplyText(cr.text)}
-                className="shrink-0 text-[10px] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-primary hover:text-primary dark:hover:border-primary text-slate-600 dark:text-slate-300 px-2 py-1 rounded-md transition-colors font-medium cursor-pointer"
+                className="shrink-0 text-[10px] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-primary hover:text-primary dark:hover:border-primary text-slate-600 dark:text-slate-300 px-2.5 py-1 rounded-lg transition-colors font-medium cursor-pointer"
               >
                 {cr.label}
               </button>
@@ -481,20 +478,22 @@ export default function SupportAgentDashboard() {
           </div>
 
           {/* RESPONSE COMPOSER */}
-          <form onSubmit={handleSendReply} className="p-3 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 flex items-center gap-2">
+          <form onSubmit={handleSendReply} className="p-3 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 flex items-center gap-2 shrink-0">
             <input
               type="text"
               placeholder={`Reply to ${activeTicket.customer}...`}
               value={replyText}
               onChange={(e) => setReplyText(e.target.value)}
-              className="flex-1 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3.5 py-2 rounded-lg text-xs outline-none focus:border-primary focus:bg-white dark:focus:bg-slate-900 transition-colors"
+              className="flex-1 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3.5 py-2.5 rounded-xl text-xs outline-none focus:border-primary focus:bg-white dark:focus:bg-slate-900 transition-colors"
             />
             <button
               type="submit"
               disabled={!replyText.trim()}
-              className="bg-primary hover:bg-primary-hover disabled:opacity-50 text-white text-xs font-bold px-4 py-2 rounded-lg shadow-sm transition-colors flex items-center gap-1.5 cursor-pointer"
+              className="bg-primary hover:bg-primary-hover disabled:opacity-50 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-md shadow-blue-500/20 transition-all flex items-center gap-1.5 cursor-pointer shrink-0"
             >
-              <Send className="w-3.5 h-3.5" /> Send Reply
+              <Send className="w-3.5 h-3.5" />
+              <span>Send</span>
+              <CornerDownLeft className="w-3 h-3 opacity-60" />
             </button>
           </form>
 

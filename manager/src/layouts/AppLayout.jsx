@@ -21,11 +21,12 @@ import {
   Sparkles
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 
 export default function AppLayout() {
   const { user, logout } = useAuth();
+  const { isDark: isDarkMode, toggleTheme } = useTheme();
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [notifications] = useState([
@@ -40,20 +41,6 @@ export default function AppLayout() {
   const handleLogout = () => {
     logout();
     navigate('/login');
-  };
-
-  useEffect(() => {
-    const isDark = document.documentElement.classList.contains('dark');
-    setIsDarkMode(isDark);
-  }, []);
-
-  const toggleTheme = () => {
-    setIsDarkMode(!isDarkMode);
-    if (!isDarkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
   };
 
   const getPageTitle = () => {
@@ -84,7 +71,6 @@ export default function AppLayout() {
   // Dedicated Manager Navigation Items
   const managerNavItems = [
     { to: '/dashboard', label: 'Executive Dashboard', icon: LayoutDashboard },
-    { to: '/analytics', label: 'Performance Analytics', icon: BarChart4 },
     { to: '/tickets', label: 'Ticket Operations', icon: Ticket },
     { to: '/agents', label: 'AI Agent Monitor', icon: Cpu },
     { to: '/builder', label: 'Workflow Builder', icon: Sparkles },
@@ -92,6 +78,7 @@ export default function AppLayout() {
     { to: '/customer360', label: 'Customer 360', icon: UserCheck },
     { to: '/chat', label: 'AI Assistant Lab', icon: MessageSquare },
     { to: '/settings', label: 'Platform Settings', icon: Settings2 },
+    { to: '/analytics', label: 'Performance Analytics', icon: BarChart4 },
   ];
 
   return (
