@@ -65,7 +65,7 @@ export const helmetConfig = helmet({
 
 const _allowedOrigins = env.NODE_ENV === 'production'
   ? [env.CLIENT_URL].filter(Boolean)
-  : ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:3000', 'http://localhost:80'];
+  : ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175', 'http://localhost:3000', 'http://localhost:80'];
 
 export const corsConfig = cors({
   origin: (origin, callback) => {

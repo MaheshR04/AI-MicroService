@@ -340,11 +340,11 @@ def validate_environment() -> None:
     jwt_key = getattr(settings, "JWT_SECRET_KEY", "")
     if len(jwt_key) < 32:
         logger.warning(
-            "[Env Validation] ⚠ JWT_SECRET_KEY is shorter than 32 characters — "
+            "[Env Validation] [WARN] JWT_SECRET_KEY is shorter than 32 characters — "
             "use a longer secret in production"
         )
 
-    logger.info("[Env Validation] ✓ Environment validated successfully")
+    logger.info("[Env Validation] [OK] Environment validated successfully")
 
 
 # ══════════════════════════════════════════════════════════════════
