@@ -7,15 +7,17 @@
     "manager",
     "support",
     "ai-chatbot",
+    "netflix-dashboard",
     "server"
   ],
   "scripts": {
-    "dev": "concurrently \"npm run dev --workspace server\" \"npm run dev --workspace manager\" \"npm run dev --workspace support\" \"npm run dev --workspace ai-chatbot\"",
+    "dev": "concurrently \"npm run dev --workspace server\" \"npm run dev --workspace manager\" \"npm run dev --workspace support\" \"npm run dev --workspace ai-chatbot\" \"npm run dev --workspace netflix-dashboard\"",
     "dev:manager": "npm run dev --workspace manager",
     "dev:support": "npm run dev --workspace support",
     "dev:chatbot": "npm run dev --workspace ai-chatbot",
+    "dev:netflix": "npm run dev --workspace netflix-dashboard",
     "dev:server": "npm run dev --workspace server",
-    "build": "npm run build --workspace manager && npm run build --workspace support && npm run build --workspace ai-chatbot",
+    "build": "npm run build --workspace manager && npm run build --workspace support && npm run build --workspace ai-chatbot && npm run build --workspace netflix-dashboard",
     "start": "npm run start --workspace server",
     "test": "npm run test --workspace server && cd ai-service && python -m pytest",
     "install:all": "npm install"
